@@ -6,9 +6,9 @@ WORKDIR /app
 
 COPY requirements.txt requirements.txt
 
-RUN apt-get update && apt-get -y upgrade && apt-get install postgresql-dev gcc python3-dev
+RUN apt-get update && apt-get -y upgrade && apt-get install postgresql-server-dev-all gcc python-dev
 
-RUN pip3 install -r requirements.txt
+RUN pip install -r requirements.txt
 
 COPY . .
 
