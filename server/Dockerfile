@@ -1,10 +1,8 @@
 # syntax=docker/dockerfile:1
 
-FROM python:3.10-rc-slim-buster
+FROM python:slim-buster
 
 WORKDIR /app
-USER python
-ENV USER python
 
 COPY requirements.txt requirements.txt
 
