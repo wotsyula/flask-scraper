@@ -6,7 +6,7 @@ WORKDIR /app
 
 COPY requirements.txt requirements.txt
 
-RUN apt-get update && apt-get -y upgrade && apt-get -y install postgresql-server-dev-all gcc python-dev
+RUN apt-get update && apt-get -y upgrade && apt-get -y install gcc libpq-dev python-dev
 
 RUN pip install -r requirements.txt
 
