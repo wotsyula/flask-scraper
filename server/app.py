@@ -1,7 +1,7 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from config import DevelopmentConfig, ProductionConfig, StagingConfig
+from server.config import DevelopmentConfig, ProductionConfig, StagingConfig
 
 import os
 
@@ -24,8 +24,8 @@ db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
 
-from models import Result
-from routes import *
+from server.models import Result
+from server.routes import *
 
 
 if __name__ == '__main__':
