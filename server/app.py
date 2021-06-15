@@ -1,10 +1,11 @@
+#!/usr/bin/env python3
+
+import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from server.config import DefaultConfig
 
-import os
-
+from config import DefaultConfig
 
 app = Flask(__name__)
 cfg = DefaultConfig()    
@@ -15,8 +16,8 @@ db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
 
-import server.models
-import server.routes
+import models
+import routes
 
 
 if __name__ == '__main__':

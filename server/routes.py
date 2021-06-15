@@ -1,6 +1,8 @@
+#!/usr/bin/env python3
+
 from flask import Flask, render_template
 
-from server.app import app
+from app import app
 
 @app.route('/')
 def home():
