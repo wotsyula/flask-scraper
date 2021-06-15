@@ -2,7 +2,7 @@
 
 FROM python:slim-buster
 
-WORKDIR /app
+WORKDIR /usr/src/server
 
 COPY requirements.txt requirements.txt
 
@@ -14,4 +14,4 @@ COPY . .
 
 EXPOSE 5000
 
-CMD [ "python", "-m" , "flask", "run", "--host=0.0.0.0"]
+CMD [ 'python', '-m' , 'gunicorn', '-w', 4, '-b', '0.0.0.0:5000', '--chdir', '/usr/src/server', 'app:app']

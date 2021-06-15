@@ -1,22 +1,13 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from server.config import DevelopmentConfig, ProductionConfig, StagingConfig
+from server.config import DefaultConfig
 
 import os
 
 
-if os.environ.get('ENVIRONMENT') == 'production':
-    cfg = ProductionConfig()
-    
-elif os.environ.get('ENVIRONMENT') == 'staging':
-    cfg = StagingConfig()
-
-else:
-    cfg = DevelopmentConfig()
-
-    
 app = Flask(__name__)
+cfg = DefaultConfig()    
 
 app.config.from_object(cfg)
 
@@ -24,8 +15,8 @@ db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
 
-from server.models import Result
-from server.routes import *
+import server.models
+import server.routes
 
 
 if __name__ == '__main__':
