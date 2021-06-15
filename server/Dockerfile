@@ -6,7 +6,7 @@ WORKDIR /app
 
 COPY requirements.txt requirements.txt
 
-RUN apt-get update && apt-get -y upgrade && apt-get -y install gcc libpq-dev python-dev
+RUN apt-get update && apt-get -y upgrade
 
 RUN pip install -r requirements.txt
 
@@ -14,4 +14,4 @@ COPY . .
 
 EXPOSE 5000
 
-CMD [ "python3", "-m" , "flask", "run", "--host=0.0.0.0"]
+CMD [ "python", "-m" , "flask", "run", "--host=0.0.0.0"]
