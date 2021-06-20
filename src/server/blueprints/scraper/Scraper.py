@@ -2,7 +2,7 @@
 
 import logging
 import os
-from selenium.webdriver import Chrome
+from selenium.webdriver import Chrome, ChromeOptions
 from selenium.webdriver.remote.webdriver import WebDriver
 
 from . import CHROME_PATH
@@ -28,7 +28,8 @@ def deleteDriver() -> None:
 class Scraper:
 
     DEFAULT_OPTIONS = {
-        'executable_path': CHROME_PATH
+        'executable_path': CHROME_PATH,
+        'options': ChromeOptions(),
     }
 
 
@@ -46,6 +47,11 @@ class Scraper:
 
     def __init__(self, **kwargs) -> None:
         self.options = dict(**self.DEFAULT_OPTIONS, **kwargs) 
+
+
+# Scraper.DEFAULT_OPTIONS['options'].add_argument("--disable-extensions")
+Scraper.DEFAULT_OPTIONS['options'].add_argument("--disable-gpu")
+Scraper.DEFAULT_OPTIONS['options'].add_argument("--headless")
 
 
 def createScraper(**kwargs) -> Scraper:

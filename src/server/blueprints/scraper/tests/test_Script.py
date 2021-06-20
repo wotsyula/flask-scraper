@@ -42,7 +42,7 @@ def test_validateScript():
         assert validateScript(path) == True, 'Return true for if path is valid'
 
 
-def test_sanitizeScript(mocker):
+def test_sanitizeScript():
     for path in INVALID_PATHS:
         """Should raise an error if path is not a string"""
         with pytest.raises(TypeError) as err:
@@ -74,7 +74,13 @@ class TestScript:
     pass
 
 def test_createScript():
-    driver = webdriver.Chrome(executable_path=CHROME_PATH)
+    options = webdriver.ChromeOptions()
+
+    options.add_argument("--disable-extensions")
+    options.add_argument("--disable-gpu")
+    options.add_argument("--headless")
+
+    driver = webdriver.Chrome(executable_path=CHROME_PATH, options=options)
 
     """Should throw an error if module does not have 'Script' property"""
     with pytest.raises(Exception) as err:
