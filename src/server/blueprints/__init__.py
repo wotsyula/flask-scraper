@@ -10,6 +10,4 @@ def home():
         "status": 0,
         "error": None,
         "result": {},
-    });
-    
-from . import status
+    })

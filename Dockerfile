@@ -12,7 +12,7 @@ RUN pip install -r requirements.txt
 
 COPY src/server .
 
-RUN sh -c "chmod +x /usr/src/server/bin/chromedriver" 
+RUN sh -c "chmod +x /usr/src/server/blueprints/scrapper/chromedriver" 
 
 EXPOSE 5000
 
