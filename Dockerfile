@@ -12,8 +12,6 @@ RUN pip install -r requirements.txt
 
 COPY src/server .
 
-RUN sh -c "chmod +x /usr/src/server/blueprints/scraper/chromedriver" 
-
 EXPOSE 5000
 
 CMD [ "python", "-m" , "gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "app:app" ]
