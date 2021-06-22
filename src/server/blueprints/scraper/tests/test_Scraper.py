@@ -14,11 +14,7 @@ class TestScraper:
 
     @pytest.fixture
     def scraper(self) -> Scraper:
-        result = Scraper()
-        yield result
-
-        # scrape() calls createDriver() so we must do some cleanup
-        deleteDriver()
+        return Scraper()
 
     def test_scrape(self, scraper):
         result = scraper.scrape('tests/test_Script')

@@ -3,9 +3,9 @@
 import pytest
 from selenium import webdriver
 
-from .. import CHROME_PATH, validateScript, sanitizeScript, loadScript, Script as BaseScript, createScript
 
-from ..Script import *
+from ..Script import validateScript, sanitizeScript, loadScript, Script as BaseScript, createScript
+from ..Scraper import CHROME_URI, CHROME_OPTIONS, Scraper, createDriver
 
 INVALID_PATHS = [
     None,
@@ -27,7 +27,7 @@ MOCK_RESULT = [{
     'bar': 'foo',
 }]
 
-class Script (Script):
+class Script (BaseScript):
 
     def execute(self, **kwargs) -> list[dict]:
         return MOCK_RESULT
@@ -74,18 +74,10 @@ class TestScript:
     pass
 
 def test_createScript():
-    options = webdriver.ChromeOptions()
-
-    options.add_argument("--disable-extensions")
-    options.add_argument("--disable-gpu")
-    options.add_argument("--headless")
-
-    driver = webdriver.Chrome(executable_path=CHROME_PATH, options=options)
+    driver = createDriver(**Scraper.DEFAULT_OPTIONS)
 
     """Should throw an error if module does not have 'Script' property"""
     with pytest.raises(Exception) as err:
         createScript('tests/test_Scraper', driver)
 
     assert isinstance(createScript('tests/test_Script', driver), BaseScript), 'Should create a `Script` object'
-
-    driver.quit()

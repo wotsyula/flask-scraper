@@ -2,17 +2,29 @@
 
 import logging
 import os
-from selenium.webdriver import Chrome, ChromeOptions
+import platform
+from selenium.webdriver import Remote as WebDriver, DesiredCapabilities, ChromeOptions
 from selenium.webdriver.remote.webdriver import WebDriver
 
-from . import CHROME_PATH
 from .Script import createScript
+
+CHROME_URI = 'http://localhost:4444/' if not os.environ.get('SELENIUM_URI') else os.environ.get('SELENIUM_URI')
+CHROME_CAPABILITIES = DesiredCapabilities.CHROME
+CHROME_CAPABILITIES['prefs'] = {
+    'credentials_enable_service': False,
+    'profile.password_manager_enabled': False,
+}
+CHROME_OPTIONS = ChromeOptions()
+# CHROME_OPTIONS.add_argument('--disable-extensions')
+# CHROME_OPTIONS.add_argument('--disable-gpu')
+# CHROME_OPTIONS.add_argument('--disable-notifications')
+CHROME_OPTIONS.add_argument('--headless')
 
 
 def createDriver(**kwargs) -> WebDriver:
 
-    if createDriver.driver == None:
-        createDriver.driver = Chrome(**kwargs)        
+    if isinstance(createDriver.driver, WebDriver) != True:
+        createDriver.driver = WebDriver(**kwargs)        
 
     return createDriver.driver
 
@@ -28,8 +40,9 @@ def deleteDriver() -> None:
 class Scraper:
 
     DEFAULT_OPTIONS = {
-        'executable_path': CHROME_PATH,
-        'options': ChromeOptions(),
+        'command_executor': CHROME_URI,
+        'desired_capabilities': CHROME_CAPABILITIES,
+        'options': CHROME_OPTIONS,
     }
 
 
@@ -47,11 +60,6 @@ class Scraper:
 
     def __init__(self, **kwargs) -> None:
         self.options = dict(**self.DEFAULT_OPTIONS, **kwargs) 
-
-
-# Scraper.DEFAULT_OPTIONS['options'].add_argument("--disable-extensions")
-Scraper.DEFAULT_OPTIONS['options'].add_argument("--disable-gpu")
-Scraper.DEFAULT_OPTIONS['options'].add_argument("--headless")
 
 
 def createScraper(**kwargs) -> Scraper:
