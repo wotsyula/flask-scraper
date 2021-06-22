@@ -8,7 +8,7 @@ from selenium.webdriver.remote.webdriver import WebDriver
 
 from .Script import createScript
 
-CHROME_URI = 'http://localhost:4444/' if not os.environ.get('SELENIUM_URI') else os.environ.get('SELENIUM_URI')
+CHROME_URI = 'http://localhost:4444' if not os.environ.get('SELENIUM_URI') else os.environ.get('SELENIUM_URI')
 CHROME_CAPABILITIES = DesiredCapabilities.CHROME
 CHROME_CAPABILITIES['prefs'] = {
     'credentials_enable_service': False,
