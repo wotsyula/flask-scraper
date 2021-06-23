@@ -1,8 +1,14 @@
 #!/usr/bin/env python3
+"""
+Defines the script for `/scrapper/google/search` subdirectory
+"""
 
-from .. import Script as BaseClass
+from ..script import Script as BaseClass
 
 class Script (BaseClass):
-
-    def execute(self):
-        pass
+    """
+    Script that is imported by `Scraper` object.
+    See `Scraper.scrape()` function.
+    """
+    def execute(self, **kwargs) -> list[dict]:
+        return []

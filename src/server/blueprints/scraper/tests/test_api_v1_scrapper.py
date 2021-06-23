@@ -1,2 +1,1 @@
-def test_api_v1_scrapper():
-    pass
+#!/usr/bin/env python3

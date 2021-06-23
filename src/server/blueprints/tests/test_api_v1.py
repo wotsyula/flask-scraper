@@ -1,2 +1,1 @@
-def test_api_vi():
-    pass
+#!/usr/bin/env python3

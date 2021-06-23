@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
+"""
+Defines routes for `/status` subdirectory
+"""
+from .. import bp, empty
 
-from .. import defaultBP
-
-@defaultBP.route('/status')
+@bp.route('/status')
 def status():
-    pass
+    """
+    TODO
+    """
+    return empty()
