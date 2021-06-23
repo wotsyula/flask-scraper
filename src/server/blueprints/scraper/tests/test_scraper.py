@@ -19,7 +19,7 @@ class TestScraper:
         return Scraper()
 
     def test_scrape(self, scraper):
-        result = scraper.scrape('tests/test_Script')
+        result = scraper.scrape('tests/test_script')
 
         assert isinstance(result, list) \
             , 'Should return a list object'
