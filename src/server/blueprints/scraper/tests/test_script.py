@@ -67,7 +67,7 @@ def test_load_script():
     with pytest.raises(Exception):
         load_script('__non_existent_module__')
 
-    mod = load_script('tests/test_Script')
+    mod = load_script('tests/test_script')
     assert hasattr(mod, 'Script') \
         , 'Should return a Script module'
 
