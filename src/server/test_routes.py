@@ -9,11 +9,10 @@ Tests for `blueprint` module.
 from flask.helpers import url_for
 from flask.testing import FlaskClient
 import pytest
-from .app import create_app
 from .index import index
 
-@pytest.fixture(scope='module')
-def app():
+@pytest.fixture
+def app(create_app):
     test_app = create_app(__name__)
 
     test_app.register_blueprint(index)
