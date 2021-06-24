@@ -10,15 +10,29 @@ from flask_migrate import Migrate
 from werkzeug.exceptions import HTTPException
 
 from .config import DefaultConfig
-from .blueprints import bp
+from .index import index
 
-app = Flask(__name__)
-cfg = DefaultConfig()
+def create_app(name):
+    """Factory for Flask libraries `Flask`.
 
-app.config.from_object(cfg)
+    Args:
+        name (string): Module name to attach to app (`__name__`).
 
-db = SQLAlchemy(app)
-migrate = Migrate(app, db)
+    Returns:
+        flask.Flask: Flask `app` instance
+    """
+    application = Flask(name)
+    cfg = DefaultConfig()
+
+    application.config.from_object(cfg)
+
+    application.db = SQLAlchemy(application)
+    application.migrate = Migrate(application, application.db)
+
+    return application
+
+app = create_app(__name__)
+app.register_blueprint(index, url_prefix='/api/v1')
 
 @app.errorhandler(HTTPException)
 def handle_exception(err):
@@ -38,8 +52,6 @@ def handle_exception(err):
     })
 
     return response
-
-app.register_blueprint(bp, url_prefix='/api/v1')
 
 if __name__ == '__main__':
     app.run()

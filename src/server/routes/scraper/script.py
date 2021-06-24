@@ -2,11 +2,23 @@
 """
 Describes functions and classes for managing `Script` objects.
 """
-from abc import ABC, abstractmethod
 import importlib
 import re
-
+import os
+from abc import ABC, abstractmethod
 from selenium.webdriver.remote.webdriver import WebDriver
+
+SCRIPT_DIR = os.path.abspath(os.path.dirname(__file__))
+SCRIPTS = []
+
+for directory in os.listdir(SCRIPT_DIR):
+    abs_directory = os.path.join(SCRIPT_DIR, directory)
+
+    if os.path.isdir(abs_directory):
+        for script in os.listdir(abs_directory):
+            if re.match('^[a-z]+.py$', script) is not None:
+                SCRIPTS.append(directory + '/' + script[:-3])
+
 
 def validate_script(path: str) -> bool:
     """
