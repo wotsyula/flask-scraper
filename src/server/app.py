@@ -3,9 +3,11 @@
 Fask application
 """
 
+import logging
 from flask import Flask, json
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from werkzeug.exceptions import HTTPException
 
 from .config import DefaultConfig
 from .blueprints import bp
@@ -18,9 +20,13 @@ app.config.from_object(cfg)
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
-@app.errorhandler(Exception)
+@app.errorhandler(HTTPException)
 def handle_exception(err):
-    """Return JSON instead of HTML for HTTP errors."""
+    """
+    Return JSON instead of HTML for HTTP errors.
+    """
+    logging.exception(err.name, exc_info=err)
+
     # start with the correct headers and status code from the error
     response = err.get_response()
     # replace the body with JSON

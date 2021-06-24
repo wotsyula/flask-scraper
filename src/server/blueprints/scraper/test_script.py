@@ -1,9 +1,15 @@
 #!/usr/bin/env python3
+"""
+Tests for `script` module.
+"""
+# pylint: disable=too-few-public-methods
+# pylint: disable=missing-class-docstring
+# pylint: disable=missing-function-docstring
 
 import pytest
 
-from ..script import validate_script, sanitize_script, load_script, Script as BaseScript, create_script
-from ..scraper import Scraper, create_driver
+from .script import validate_script, sanitize_script, load_script, Script as BaseScript, create_script
+from .scraper import Scraper, create_driver
 
 INVALID_PATHS = [
     None,
@@ -44,16 +50,16 @@ def test_validate_script():
 
 def test_sanitize_script():
     for path in INVALID_PATHS:
-        """Should raise an error if path is not a string"""
+        # Should raise an error if path is not a string
         with pytest.raises(TypeError):
             sanitize_script("abc.def")
 
-    """Should raise an error if path contains full stop (.)"""
+    # Should raise an error if path contains full stop (.)
     with pytest.raises(TypeError):
         sanitize_script("abc.def")
 
     for number in range(0-9):
-        """Should raise an error if path contains a number (0-9)"""
+        # Should raise an error if path contains a number (0-9)
         with pytest.raises(TypeError):
             sanitize_script(f'abc{number}def')
 
@@ -63,7 +69,7 @@ def test_sanitize_script():
 
 
 def test_load_script():
-    """Should raise an error for non existent modules"""
+    # Should raise an error for non existent modules
     with pytest.raises(Exception):
         load_script('__non_existent_module__')
 
@@ -78,7 +84,7 @@ class TestScript:
 def test_create_script():
     driver = create_driver(**Scraper.DEFAULT_OPTIONS)
 
-    """Should throw an error if module does not have 'Script' property"""
+    # Should throw an error if module does not have 'Script' property
     with pytest.raises(Exception):
         create_script('tests/test_scraper', driver)
 

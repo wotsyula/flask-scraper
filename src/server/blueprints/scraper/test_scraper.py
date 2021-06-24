@@ -1,8 +1,14 @@
 #!/usr/bin/env python3
+"""
+Tests for `scraper` module.
+"""
+# pylint: disable=too-few-public-methods
+# pylint: disable=missing-class-docstring
+# pylint: disable=missing-function-docstring
 
 import pytest
 from selenium.webdriver.remote.webdriver import WebDriver
-from ..scraper import Scraper, create_driver, create_scraper
+from .scraper import Scraper, create_driver, create_scraper
 from .test_script import MOCK_RESULT
 
 def test_create_driver():

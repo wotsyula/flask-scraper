@@ -4,13 +4,13 @@ Defines classes for managing configuration
 """
 
 import os
+# pylint: disable=too-few-public-methods
 
 baseDir = os.path.abspath(os.path.dirname(__file__))
 
 templateDir = os.path.join(baseDir, 'templates')
 
 class Config:
-    # pylint: disable=too-few-public-methods
     """
     Stores Flask configuration passed to `app.config.from_object()`.
     """
@@ -22,7 +22,6 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 class DefaultConfig(Config):
-    # pylint: disable=too-few-public-methods
     """
     Default configuration. Takes values from enviroment variable `FLASK_ENV`.
     """
@@ -30,14 +29,12 @@ class DefaultConfig(Config):
     TESTING = os.environ.get('FLASK_ENV') == 'testing'
 
 class ProductionConfig(Config):
-    # pylint: disable=too-few-public-methods
     """
     Production environment configuration.
     """
     DEBUG = False
 
 class DevelopmentConfig(Config):
-    # pylint: disable=too-few-public-methods
     """
     Development environment configuration.
     """
@@ -46,7 +43,6 @@ class DevelopmentConfig(Config):
 
 
 class TestingConfig(Config):
-    # pylint: disable=too-few-public-methods
     """
     Testing environment configuration.
     """
