@@ -73,7 +73,7 @@ def test_load_script():
     with pytest.raises(Exception):
         load_script('__non_existent_module__')
 
-    mod = load_script('tests/test_script')
+    mod = load_script('test_script')
     assert hasattr(mod, 'Script') \
         , 'Should return a Script module'
 
@@ -86,7 +86,7 @@ def test_create_script():
 
     # Should throw an error if module does not have 'Script' property
     with pytest.raises(Exception):
-        create_script('tests/test_scraper', driver)
+        create_script('test_scraper', driver)
 
-    assert isinstance(create_script('tests/test_script', driver), BaseScript) \
+    assert isinstance(create_script('test_script', driver), BaseScript) \
         , 'Should create a `Script` object'
