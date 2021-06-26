@@ -79,7 +79,9 @@ def test_load_script():
 
 
 class TestScript:
-    pass
+    @pytest.fixture
+    def script(self):
+        return Script(None)
 
 def test_create_script():
     driver = create_driver(**Scraper.DEFAULT_OPTIONS)

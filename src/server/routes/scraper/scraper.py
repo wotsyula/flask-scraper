@@ -23,15 +23,20 @@ CHROME_OPTIONS = ChromeOptions()
 CHROME_OPTIONS.add_argument('--headless')
 
 
-def create_driver(**kwargs) -> WebDriver:
+def create_driver(timeout: int = 10, **kwargs) -> WebDriver:
     """
     Creates a selenium `Webdriver` instance.
+
+    Args:
+        timeout (int, optional): Value sent to `driver.implicitly_wait`. Defaults to 10.
 
     Returns:
         selenium.webdriver.Remote: instance to use for scraping
     """
     if isinstance(create_driver.driver, WebDriver) is not True:
         create_driver.driver = WebDriver(**kwargs)
+
+        create_driver.driver.implicitly_wait(timeout)
 
     return create_driver.driver
 
@@ -56,6 +61,7 @@ class Scraper:
         'command_executor': CHROME_URI,
         'desired_capabilities': CHROME_CAPABILITIES,
         'options': CHROME_OPTIONS,
+        'timeout': 10,
     }
 
 

@@ -10,13 +10,13 @@ import pytest
 from flask import url_for
 from flask.testing import FlaskClient
 
-from .index import index
+from . import index
 
 @pytest.fixture
 def app(create_app):
     return create_app(__name__, index)
 
-def test_status(client: FlaskClient):
+def test_get_status(client: FlaskClient):
     response = client.get(url_for('index.get_status'))
 
     assert response.status_code == 200 \

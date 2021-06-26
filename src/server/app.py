@@ -10,7 +10,7 @@ from werkzeug.exceptions import HTTPException
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from .config import DefaultConfig
-from .index import index
+from .routes import index
 
 def create_app(name):
     """Factory for Flask libraries `Flask`.

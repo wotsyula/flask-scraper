@@ -95,7 +95,7 @@ class Script (ABC):
     DEFAULT_OPTIONS = {}
 
     @abstractmethod
-    def execute (self, **kwargs) -> list[dict]:
+    def execute(self, **kwargs) -> list[dict]:
         """
         Executes the script using `driver`.
 
