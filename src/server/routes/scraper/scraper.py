@@ -2,7 +2,6 @@
 """
 Defines functions and classes for managing `Scraper` object.
 """
-import logging
 import os
 from selenium.webdriver import Remote as WebDriver, DesiredCapabilities, ChromeOptions
 from selenium.webdriver.remote.webdriver import WebDriver
@@ -20,7 +19,7 @@ CHROME_OPTIONS = ChromeOptions()
 # CHROME_OPTIONS.add_argument('--disable-extensions')
 # CHROME_OPTIONS.add_argument('--disable-gpu')
 # CHROME_OPTIONS.add_argument('--disable-notifications')
-CHROME_OPTIONS.add_argument('--headless')
+# CHROME_OPTIONS.add_argument('--headless')
 
 
 def create_driver(timeout: int = 10, **kwargs) -> WebDriver:
@@ -37,6 +36,10 @@ def create_driver(timeout: int = 10, **kwargs) -> WebDriver:
         create_driver.driver = WebDriver(**kwargs)
 
         create_driver.driver.implicitly_wait(timeout)
+
+    else:
+        # Merge options
+        create_driver.driver.options = dict(**create_driver.driver.options,**kwargs)
 
     return create_driver.driver
 
@@ -76,10 +79,7 @@ class Scraper:
             list[dict]: See `script.py:Script:execute`
         """
         options = dict(**self.options, **kwargs)
-
-        logging.info(f'Scraping ({path})', extra=options)
-
-        driver = create_driver(**options)
+        driver = create_driver(**self.options)
         script = create_script(path, driver, **options)
 
         return script.execute(**options)

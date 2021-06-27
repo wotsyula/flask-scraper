@@ -7,6 +7,7 @@ Tests for `script` module.
 # pylint: disable=missing-function-docstring
 
 import pytest
+import time
 
 from .script import validate_script, sanitize_script, load_script, Script as BaseScript, create_script
 from .scraper import Scraper, create_driver
@@ -36,6 +37,14 @@ class Script (BaseScript):
     def execute(self, **kwargs) -> list[dict]:
         return MOCK_RESULT
 
+    def __init__(self, **kwargs) -> None:
+        self.options = dict(**self.DEFAULT_OPTIONS, **kwargs)
+        self.driver = None
+
+
+@pytest.fixture
+def driver():
+    return create_driver(**Scraper.DEFAULT_OPTIONS)
 
 def test_validate_script():
 
@@ -81,11 +90,34 @@ def test_load_script():
 class TestScript:
     @pytest.fixture
     def script(self):
-        return Script(None)
+        return Script()
 
-def test_create_script():
-    driver = create_driver(**Scraper.DEFAULT_OPTIONS)
+    def test_sleep(self, script):
+        prev_time = round(time.time() * 1000)
 
+        script.sleep()
+
+        curr_time = round(time.time() * 1000)
+
+        assert curr_time - prev_time >= 300 \
+            , 'It should halt execution'
+
+        prev_time = round(time.time() * 1000)
+
+        script.sleep(5)
+
+        curr_time = round(time.time() * 1000)
+
+        assert curr_time - prev_time >= 1500 \
+            , 'It should halt execution multiplied by multiplier'
+
+    def test_click(self, script):
+        pass
+
+    def test_send_keys(self, script):
+        pass
+
+def test_create_script(driver):
     # Should throw an error if module does not have 'Script' property
     with pytest.raises(Exception):
         create_script('test_scraper', driver)
