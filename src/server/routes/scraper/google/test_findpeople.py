@@ -67,6 +67,62 @@ class TestScript:
         assert script.go_to_next() is False \
             , 'Should do nothing if current page is 99 or higher'
 
+    def test_scrape_results(self, script):
+        """
+        Test if `scrape_results()` returns search results
+        """
+        # go to google.com website
+        if 'google.com/search' not in script.driver.current_url:
+            script.driver.get('https://google.com')
+
+        # enter search term
+        script.send_keys('//*[@name="q"]', 'software engineer' + Keys.ENTER)
+
+        results = []
+
+        # get results
+        for result in script.scrape_results():
+            assert 'http://' in result['href'] or 'https://' in result['href'] \
+                , 'Should return external links'
+
+            results.append(result)
+
+            # quit after 10 results
+            if len(results) > 9:
+                break
+
+        assert ' 3 ' in script.xpath('//*[@id="result-stats"]').text \
+            , 'Should navigate to second page'
+
+    def test_scrape(self, script):
+        """
+        Test if `scrape()` returns search results
+        """
+        # go to google.com website
+        if 'google.com/search' not in script.driver.current_url:
+            script.driver.get('https://google.com')
+
+        # enter search term
+        query = 'swimming instructor (inurl:linkedin|inurl:twitter|inurl:facebook)'
+
+        script.send_keys('//*[@name="q"]', query + Keys.ENTER)
+
+        # get results
+        results = []
+
+        for result in script.scrape():
+            results.append(result)
+
+            # quit after 20 results
+            if len(results) > 19:
+                break
+
+        assert len(results) > 5 \
+            , 'Should return more than 5 results'
+
+        assert script.current_page > 1 \
+            , 'Should navigate to other pages'
+
     def test_execute(self, script: Script):
         script.driver.get('http://example.com/')
         script.execute()
