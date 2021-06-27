@@ -8,6 +8,7 @@ import random
 import re
 import time
 from abc import ABC, abstractmethod
+from typing import Generator
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webdriver import WebDriver
@@ -115,28 +116,37 @@ class Script (ABC):
             raise TypeError('multiplier should be an number larger than 0')
 
         # Get duration to wait in milliseconds
-        duration = multiplier * random.randint(300, 1000) / 1000
+        duration = multiplier * random.randint(300, 600) / 1000
 
         time.sleep(duration)
 
 
-    def click(self, xpath: str) -> WebElement:
+    def xpath(self, xpath: str) -> WebElement:
+        """
+        Returns element found at XPath
+
+        Args:
+            xpath (str): XPath of element to find
+        """
+        # wait for element to become available
+        element_exists = EC.presence_of_element_located((By.XPATH, xpath))
+
+        return self.wait.until(element_exists)
+
+
+    def click(self, xpath: str) -> None:
         """
         Clicks an element
 
         Args:
             xpath (str): XPath of element to click
-
-        Returns:
-            WebElement: returns element found by `find_element_by_xpath()`
         """
         element_clickable = EC.element_to_be_clickable((By.XPATH, xpath))
 
         self.action.move_to_element(self.wait.until(element_clickable)).perform()
         self.wait.until(element_clickable).click()
-        self.sleep(4)
+        self.sleep(2)
 
-        return self.wait.until(element_clickable)
 
     def send_keys(self, xpath: str, keys: str, click = False) -> WebElement:
         """
@@ -145,24 +155,23 @@ class Script (ABC):
         Args:
             xpath (str): XPath of element to click
             click (bool, optional): If `True` will click on element before sending keys. Defaults to False.
-
-        Returns:
-            WebElement: returns element found by `find_element_by_xpath()`
         """
+        # click element
+        if click:
+            self.click(xpath)
+
+        # enter characters with delay between keystrokes
         element_exists = EC.presence_of_element_located((By.XPATH, xpath))
 
-        if click:
-            self.wait.until(element_exists).click()
-            self.sleep(2)
+        self.wait.until(element_exists).clear()
 
         for char in keys:
             self.wait.until(element_exists).send_keys(char)
             self.sleep(1)
 
-        return self.wait.until(element_exists)
 
     @abstractmethod
-    def execute(self, **kwargs) -> list[dict]:
+    def execute(self, **kwargs) -> Generator[dict, None, None]:
         """
         Executes the script using `driver`.
 
@@ -181,6 +190,7 @@ class Script (ABC):
         self.driver = driver
         self.action = ActionChains(self.driver)
         self.wait = wait.WebDriverWait(self.driver, 10)
+        self.current_page = 0
 
 def create_script(path: str, driver: WebDriver, **kwargs) -> Script:
     """

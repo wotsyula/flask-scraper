@@ -111,6 +111,9 @@ class TestScript:
         assert curr_time - prev_time >= 1500 \
             , 'It should halt execution multiplied by multiplier'
 
+    def test_xpath(self, script):
+        pass
+
     def test_click(self, script):
         pass
 

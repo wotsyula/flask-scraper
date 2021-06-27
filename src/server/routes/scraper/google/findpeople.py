@@ -5,9 +5,9 @@ Script that finds people on `google.com`
 Searches for linkedin accounts, twitter accounts, facebook accounts.
 """
 
+from typing import Generator
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.remote.webelement import WebElement
 
 from ..script import Script as BaseClass
 
@@ -18,24 +18,83 @@ class Script (BaseClass):
     Script that is imported by `Scraper` object.
     See `Scraper.scrape()` function.
     """
-    def execute(self, **kwargs) -> list[dict]:
-        result = []
+
+    def go_to_next(self) -> bool:
+        """
+        Sends browser to next page.
+
+        Returns:
+            bool: Returns `True` if successful and `False` otherwise
+        """
+        # Don't try to scan more than 99 pages
+        if self.current_page < 1 or self.current_page > 98:
+            return False
+
+        try:
+            # navigate to bottom of page
+            self.send_keys('//*[@name="q"]', Keys.PAGE_DOWN + Keys.PAGE_DOWN + Keys.END)
+
+            # click on next page link
+            link_text = str(self.current_page + 1)
+
+            self.driver.find_element_by_link_text(link_text).click()
+            self.sleep(4)
+
+            # check current page
+            expected_text = ' ' + link_text + ' '
+            stat_text = self.xpath('//*[@id="result-stats"]').text
+
+            if expected_text in stat_text:
+                # update page pointer
+                self.current_page += 1
+                return True
+
+        except (TimeoutException, NoSuchElementException):
+            pass
+
+        return False
+
+    def get_result(self) -> Generator[dict, None, None]:
+        """
+        Generator function that scrapes search results on current page.
+
+        Yields:
+            Generator[dict, None, None]: search result
+        """
+        pass
+
+    def scrape(self) -> Generator[dict, None, None]:
+        """
+        Generator function that scrapes search results on current all pages.
+
+        Yields:
+            Generator[dict, None, None]: search result
+        """
+        pass
+
+    def execute(self, **kwargs) -> Generator[dict, None, None]:
         options = dict(**self.options, **kwargs)
-        query = str(options.get('query', ''))
-        retries = options.get('retries', 0)
+        query = str(options.pop('query', ''))
+        retries = options.pop('retries', 0)
+
+        self.current_page = 0
 
         # exit early if no query
         if len(query) < 2:
-            return result
+            return
 
         try:
             # go to google.com website
-            self.driver.get(URL)
+            if 'google.com/search' not in self.driver.current_url:
+                self.driver.get(URL)
 
             # enter query
-            field = self.send_keys('//*[@name="q"]', query, True)
+            self.send_keys('//*[@name="q"]' + Keys.ENTER, query, True)
 
-            field.send_keys(Keys.ENTER)
+            self.current_page = 1
+
+            # parse results
+            self.scrape()
 
         except NoSuchElementException:
             pass
@@ -45,6 +104,4 @@ class Script (BaseClass):
             if retries > 2:
                 raise err
             else:
-                return self.execute(retries = retries + 1, **kwargs)
-
-        return result
+                self.execute(retries = retries + 1, **kwargs)

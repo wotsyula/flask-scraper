@@ -14,7 +14,7 @@ from .test_script import MOCK_RESULT
 def test_create_driver():
     assert isinstance(create_driver(**Scraper.DEFAULT_OPTIONS), WebDriver) \
         , 'Should return an instance of `Webdriver`'
-    assert create_driver() == create_driver() \
+    assert create_driver() is create_driver() \
         , 'Should return the same instance (Singleton)'
 
 

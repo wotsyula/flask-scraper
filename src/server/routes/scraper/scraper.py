@@ -37,10 +37,6 @@ def create_driver(timeout: int = 10, **kwargs) -> WebDriver:
 
         create_driver.driver.implicitly_wait(timeout)
 
-    else:
-        # Merge options
-        create_driver.driver.options = dict(**create_driver.driver.options,**kwargs)
-
     return create_driver.driver
 
 create_driver.driver = None
