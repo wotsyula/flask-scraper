@@ -106,7 +106,7 @@ class Script (BaseClass):
                 break
 
     def execute(self, query: str = '', **kwargs) -> Generator[dict, None, None]:
-        options = dict(**self.options, **kwargs)
+        options = {**self.options, **kwargs}
         retries = options.pop('retries', 0)
 
         # exit early if no query

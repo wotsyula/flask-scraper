@@ -6,6 +6,7 @@ Tests for `script` module.
 # pylint: disable=missing-class-docstring
 # pylint: disable=missing-function-docstring
 
+from typing import Generator
 import pytest
 import time
 
@@ -34,11 +35,11 @@ MOCK_RESULT = [{
 
 class Script (BaseScript):
 
-    def execute(self, **kwargs) -> list[dict]:
-        return MOCK_RESULT
+    def execute(self, **kwargs) -> Generator[dict, None, None]:
+        yield MOCK_RESULT
 
     def __init__(self, driver: any = None, **kwargs) -> None:
-        self.options = dict(**self.DEFAULT_OPTIONS, **kwargs)
+        self.options = {**self.DEFAULT_OPTIONS, **kwargs}
         self.driver = None
 
 

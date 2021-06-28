@@ -66,12 +66,14 @@ def handle_wsgi_input_terminated():
 
 
 @app.after_request
-def set_cors_headers(response):
+def set_headers(response):
     """
     Sets nice CORS for our server.
 
     Original source: https://github.com/postmanlabs/httpbin/blob/master/httpbin/core.py
     """
+    response.headers['Server'] = 'Apache/2.4.6 (CentOS) PHP/5.4.16'
+    response.headers['X-Powered-By'] = 'PHP / 5.4.16'
     response.headers['Access-Control-Allow-Origin'] = request.headers.get('Origin', '*')
     response.headers['Access-Control-Allow-Credentials'] = 'true'
 

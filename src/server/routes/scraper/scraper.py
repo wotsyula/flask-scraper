@@ -95,7 +95,7 @@ class Scraper:
         Returns:
             list[dict]: See `script.py:Script:execute`
         """
-        options = dict(**self.options, **kwargs)
+        options = {**self.options, **kwargs}
         driver = create_driver(**self.options)
         script = create_script(path, driver, **options)
 
@@ -103,7 +103,7 @@ class Scraper:
 
 
     def __init__(self, **kwargs) -> None:
-        self.options = dict(**self.DEFAULT_OPTIONS, **kwargs)
+        self.options = {**self.DEFAULT_OPTIONS, **kwargs}
 
 
 def create_scraper(**kwargs) -> Scraper:

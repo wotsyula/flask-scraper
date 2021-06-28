@@ -185,7 +185,7 @@ class Script (ABC):
 
         super().__init__()
 
-        self.options = dict(**self.DEFAULT_OPTIONS, **kwargs)
+        self.options = {**self.DEFAULT_OPTIONS, **kwargs}
         self.driver = driver
         self.action = ActionChains(self.driver)
         self.wait = wait.WebDriverWait(self.driver, 30)

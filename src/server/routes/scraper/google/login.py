@@ -36,7 +36,7 @@ class Script (BaseClass):
         Yields:
             Generator[dict, None, None]: [description]
         """
-        options = dict(**self.options, **kwargs)
+        options = {**self.options, **kwargs}
         retries = options.pop('retries', 0)
 
         # exit early if no user name / pass

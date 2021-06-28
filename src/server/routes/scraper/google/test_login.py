@@ -40,7 +40,7 @@ class TestScript:
         assert result.status == 200 \
             , 'Should return a result with user_name and user_pass'
 
-        assert result.error == None \
+        assert result.error is None \
             , 'Should return a result with user_name and user_pass'
 
         assert isinstance(result.result, dict) \

@@ -6,6 +6,7 @@ Tests for `scraper` module.
 # pylint: disable=missing-class-docstring
 # pylint: disable=missing-function-docstring
 
+from typing import Generator
 import pytest
 from selenium.webdriver.remote.webdriver import WebDriver
 from .scraper import Scraper, create_driver, create_scraper
@@ -25,9 +26,9 @@ class TestScraper:
     def test_scrape(self, scraper):
         result = scraper.scrape('test_script')
 
-        assert isinstance(result, list) \
+        assert isinstance(result, Generator) \
             , 'Should return a list object'
-        assert result == MOCK_RESULT \
+        assert next(result) == MOCK_RESULT \
             , 'Should call script->execute'
 
 def test_create_scraper():
