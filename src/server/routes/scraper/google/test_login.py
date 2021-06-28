@@ -7,7 +7,7 @@ Tests for `findpeople` script.
 # pylint: disable=missing-function-docstring
 import pytest
 
-from .login import Script
+from .login import BAD_REQUEST, Script
 from ..scraper import create_driver, create_script, Scraper
 
 @pytest.fixture
@@ -22,25 +22,26 @@ def script(driver):
 class TestScript:
     def test_execute(self, script: Script):
         script.driver.get('http://example.com/')
-        script.execute()
-        script.execute(user_pass = 'foo')
 
-        assert script.driver.current_url == 'http://example.com/' \
-            , 'It should do nothing with no user_name'
+        assert next(script.execute()) == BAD_REQUEST \
+            , 'Should yield bad request with no `user_name` option'
 
-        script.execute()
-        script.execute(user_name = 'foo')
+        assert next(script.execute(user_pass='foo')) == BAD_REQUEST \
+            , 'Should yield bad request with no `user_name` option'
 
-        assert script.driver.current_url == 'http://example.com/' \
-            , 'It should do nothing with no user_pass'
+        assert next(script.execute(user_name='foo')) == BAD_REQUEST \
+            , 'Should yield bad request with no `user_pass` option'
 
-        script.execute(
-            user_name = 'foo',
-            user_pass = 'bar',
-        )
+        result = next(script.execute(
+            user_name = 'pokemon',
+            user_pass = 'pokemon',
+        ))
 
-        assert script.driver.current_url == '' \
-            , 'It should do nothing with no user_pass'
+        assert result.status == 200 \
+            , 'Should return a result with user_name and user_pass'
 
-        assert script.driver.current_url == '' \
-            , 'It should do nothing with no user_pass'
+        assert result.error == None \
+            , 'Should return a result with user_name and user_pass'
+
+        assert isinstance(result.result, dict) \
+            , 'Should return a result with user_name and user_pass'

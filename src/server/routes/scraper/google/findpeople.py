@@ -12,6 +12,8 @@ from selenium.webdriver.common.keys import Keys
 from ..script import Script as BaseClass
 
 URL = 'https://www.google.com'
+SOCIAL_QUERY = ' (inurl:linkedin|inurl:twitter|inurl:facebook)'
+SOCIAL_SITES = ['twitter.com/', 'facebook.com/', 'linkedin.com/in/']
 
 class Script (BaseClass):
     """
@@ -35,30 +37,23 @@ class Script (BaseClass):
             self.send_keys('//*[@name="q"]', Keys.PAGE_DOWN + Keys.PAGE_DOWN + Keys.END)
 
             try:
+                # click on next page link
+                link_text = str(self.current_page + 1)
+
+                self.driver.find_element_by_link_text(link_text).click()
+                self.sleep(4)
+
+                # update page pointer
+                self.current_page += 1
+                return True
+
+            except (NoSuchElementException, TimeoutException, StaleElementReferenceException): 
                 # click show ommited results link
                 self.click('//*[contains(@href, "filter=0")]')
 
                 # update page pointer
                 self.current_page = 1
 
-                return True
-
-            except (NoSuchElementException, TimeoutException, StaleElementReferenceException):
-                pass
-
-            # click on next page link
-            link_text = str(self.current_page + 1)
-
-            self.driver.find_element_by_link_text(link_text).click()
-            self.sleep(4)
-
-            # check current page
-            expected_text = ' ' + link_text + ' '
-            stat_text = self.xpath('//*[@id="result-stats"]').text
-
-            if expected_text in stat_text:
-                # update page pointer
-                self.current_page += 1
                 return True
 
         except (TimeoutException, NoSuchElementException):
@@ -74,10 +69,10 @@ class Script (BaseClass):
             Generator[dict, None, None]: search result
         """
         try:
-            for link in self.driver.find_elements_by_xpath('//*[@class="g"]//a[@href]'):
+            for link in self.driver.find_elements_by_xpath('//*[@id="search"]//a[@href]'):
                 href: str = link.get_attribute('href')
                 
-                if 'google.com' in href or 'googleusercontent.com' in href:
+                if len(link.text) < 4 or 'google.com' in href or 'googleusercontent.com' in href:
                     continue
 
                 yield {
@@ -98,25 +93,20 @@ class Script (BaseClass):
         # set current page
         self.current_page = 1
 
-        # get results for current page
-        for result in self.scrape_results():
-            for test_string in ['twitter.com/', 'facebook.com/', 'linkedin.com/in/']:
-                if test_string in result['href']:
-                    yield result
-                    break
-
-        # go to next page
-        while self.go_to_next():
-            # get results for next page
+        while True:
+            # get results for current page
             for result in self.scrape_results():
-                for test_string in ['twitter.com/', 'facebook.com/', 'linkedin.com/in/']:
+                for test_string in SOCIAL_SITES:
                     if test_string in result['href']:
                         yield result
                         break
 
-    def execute(self, **kwargs) -> Generator[dict, None, None]:
+            # go to next page
+            if not self.go_to_next():
+                break
+
+    def execute(self, query: str = '', **kwargs) -> Generator[dict, None, None]:
         options = dict(**self.options, **kwargs)
-        query = str(options.pop('query', ''))
         retries = options.pop('retries', 0)
 
         # exit early if no query
@@ -129,12 +119,13 @@ class Script (BaseClass):
                 self.driver.get(URL)
 
             # enter query
-            self.send_keys('//*[@name="q"]' + Keys.ENTER, query, True)
+            new_query = query + SOCIAL_QUERY + Keys.ENTER
+            self.send_keys('//*[@name="q"]', new_query, True)
 
             self.current_page = 1
 
             # parse results
-            self.scrape()
+            yield from self.scrape()
 
         except NoSuchElementException:
             pass
@@ -144,4 +135,5 @@ class Script (BaseClass):
             if retries > 2:
                 raise err
             else:
-                self.execute(retries = retries + 1, **kwargs)
+                retries += 1
+                self.execute(retries=retries, **kwargs)

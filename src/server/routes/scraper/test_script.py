@@ -37,7 +37,7 @@ class Script (BaseScript):
     def execute(self, **kwargs) -> list[dict]:
         return MOCK_RESULT
 
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, driver: any = None, **kwargs) -> None:
         self.options = dict(**self.DEFAULT_OPTIONS, **kwargs)
         self.driver = None
 

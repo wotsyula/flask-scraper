@@ -6,6 +6,7 @@ Tests for `findpeople` script.
 # pylint: disable=missing-class-docstring
 # pylint: disable=missing-function-docstring
 
+from functools import reduce
 import pytest
 from selenium.webdriver.common.keys import Keys
 
@@ -91,8 +92,8 @@ class TestScript:
             if len(results) > 9:
                 break
 
-        assert ' 3 ' in script.xpath('//*[@id="result-stats"]').text \
-            , 'Should navigate to second page'
+        assert len(results) > 5 \
+            , 'Should return more than 5 results'
 
     def test_scrape(self, script):
         """
@@ -128,14 +129,30 @@ class TestScript:
         script.execute()
 
         assert script.driver.current_url == 'http://example.com/' \
-            , 'It should do nothing with no query'
+            , 'Should do nothing with no query'
 
-        script.execute(
-            query = 'Donald Trump',
-        )
+        # get results
+        results = []
 
-        assert script.driver.current_url == '' \
-            , 'It should do nothing with no user_pass'
+        for item in script.execute(query='Beyoncé'):
+            text = item['text'].lower()
 
-        assert script.driver.current_url == '' \
-            , 'It should do nothing with no user_pass'
+            if 'beyoncé' in text or 'beyonce' in text:
+                results.append(item)
+
+            if len(results) > 4:
+                break
+
+        assert len(results) > 4 \
+            , 'Should have more than 4 results'
+
+        search_texts = [
+            'https://twitter.com/beyonce',
+            'https://www.facebook.com/beyonce',
+        ]
+
+        for search_text in search_texts:
+            reducer = lambda a, b: True if search_text in b['href'] else a
+
+            assert reduce(reducer, results, False) \
+                , 'It should find beyonces twitter and facebook accounts'

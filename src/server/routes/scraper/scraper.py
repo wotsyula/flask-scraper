@@ -3,6 +3,9 @@
 Defines functions and classes for managing `Scraper` object.
 """
 import os
+from typing import Generator
+from fake_useragent import UserAgent
+from selenium import webdriver
 from selenium.webdriver import Remote as WebDriver, DesiredCapabilities, ChromeOptions
 from selenium.webdriver.remote.webdriver import WebDriver
 
@@ -15,41 +18,61 @@ CHROME_CAPABILITIES['prefs'] = {
     'credentials_enable_service': False,
     'profile.password_manager_enabled': False,
 }
-CHROME_OPTIONS = ChromeOptions()
-# CHROME_OPTIONS.add_argument('--disable-extensions')
-# CHROME_OPTIONS.add_argument('--disable-gpu')
-# CHROME_OPTIONS.add_argument('--disable-notifications')
-# CHROME_OPTIONS.add_argument('--headless')
+CHROME_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, ' \
+    + 'like Gecko) Chrome/91.0.4472.101 Safari/537.36 OPR/77.0.4054.90'
 
 
-def create_driver(timeout: int = 10, **kwargs) -> WebDriver:
+def generate_driver(timeout = 30, **kwargs) -> Generator[WebDriver, None, None]:
+    """
+    Creates selenium `Webdriver` instances.
+
+    Args:
+        timeout (int, optional): Value sent to `driver.implicitly_wait`. Defaults to 30.
+
+    Yields:
+        Generator[WebDriver, None, None]: instance to use for scrapping
+    """
+
+    while True:
+        # generate user agent
+        # user_agent = UserAgent(cache=False, fallback=CHROME_UA).random
+
+        # create driver options
+        options = ChromeOptions()
+
+        # options.add_argument('--disable-extensions')
+        # options.add_argument('--disable-gpu')
+        # options.add_argument('--headless')
+        options.add_argument('--disable-notifications')
+        # options.add_argument(f'--user-agent="{user_agent}"')
+        options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        options.add_experimental_option('useAutomationExtension', False)
+
+        driver = WebDriver(options=options, **kwargs)
+
+        # wait for elements
+        driver.implicitly_wait(timeout)
+
+        # change view port
+        driver.set_window_size(1680, 990)
+
+        yield driver
+
+        # close browser when done
+        driver.quit()
+
+
+def create_driver(timeout = 30, **kwargs) -> WebDriver:
     """
     Creates a selenium `Webdriver` instance.
 
     Args:
-        timeout (int, optional): Value sent to `driver.implicitly_wait`. Defaults to 10.
+        timeout (int, optional): Value sent to `driver.implicitly_wait`. Defaults to 30.
 
     Returns:
-        selenium.webdriver.Remote: instance to use for scraping
+        WebDriver: instance to use for scrapping
     """
-    if isinstance(create_driver.driver, WebDriver) is not True:
-        create_driver.driver = WebDriver(**kwargs)
-
-        create_driver.driver.implicitly_wait(timeout)
-
-    return create_driver.driver
-
-create_driver.driver = None
-
-
-def delete_driver() -> None:
-    """
-    Destroys a selenium `Webdriver` instance.
-    """
-    if create_driver.driver is not None:
-        create_driver.driver.quit()
-        create_driver.driver = None
-
+    return next(generate_driver(timeout=timeout, **kwargs))
 
 class Scraper:
     """
@@ -59,8 +82,6 @@ class Scraper:
     DEFAULT_OPTIONS = {
         'command_executor': CHROME_URI,
         'desired_capabilities': CHROME_CAPABILITIES,
-        'options': CHROME_OPTIONS,
-        'timeout': 10,
     }
 
 

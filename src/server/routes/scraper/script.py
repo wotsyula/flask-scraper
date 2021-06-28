@@ -143,7 +143,6 @@ class Script (ABC):
         """
         element_clickable = EC.element_to_be_clickable((By.XPATH, xpath))
 
-        self.action.move_to_element(self.wait.until(element_clickable)).perform()
         self.wait.until(element_clickable).click()
         self.sleep(2)
 
@@ -167,7 +166,7 @@ class Script (ABC):
 
         for char in keys:
             self.wait.until(element_exists).send_keys(char)
-            self.sleep(1)
+            time.sleep(random.randint(100,400) / 1000)
 
 
     @abstractmethod
@@ -189,7 +188,7 @@ class Script (ABC):
         self.options = dict(**self.DEFAULT_OPTIONS, **kwargs)
         self.driver = driver
         self.action = ActionChains(self.driver)
-        self.wait = wait.WebDriverWait(self.driver, 10)
+        self.wait = wait.WebDriverWait(self.driver, 30)
         self.current_page = 0
 
 def create_script(path: str, driver: WebDriver, **kwargs) -> Script:
