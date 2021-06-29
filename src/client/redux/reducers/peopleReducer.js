@@ -19,6 +19,7 @@ export const peopleReducer = (state = initialState, {type, results}) => {
             return {...state, status: 'running'};
 
         case ActionTypes.FIND_PEOPLE_STATUS:
+            debugger;
             return {...state, status: results.result};
 
         case ActionTypes.FIND_PEOPLE_CANCEL:

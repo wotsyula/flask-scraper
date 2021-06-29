@@ -102,13 +102,14 @@ def get_site_script_status(site, script):
 
     # check if scrape exists
     if script not in SCRIPT_FUTURES or not isinstance(SCRIPT_FUTURES[script], Future):
-        return abort(404)
+        result = None
 
-    # get results
-    try:
-        result = SCRIPT_FUTURES[script].result(timeout=0)
-    except TimeoutError:
-        result = 'running'
+    else:
+        # get results
+        try:
+            result = SCRIPT_FUTURES[script].result(timeout=0)
+        except TimeoutError:
+            result = 'running'
 
     return jsonify({
         'status': 0,
