@@ -14,7 +14,6 @@ const Header = () => {
         const timer = setInterval(() => axios
             .get('http://localhost:5000/api/v1/scraper/google/findpeople/status')
             .then((response) => {
-                debugger;
                 dispatch(findPeopleStatus(response.data));
             })
             .catch((err) => {
@@ -29,7 +28,7 @@ const Header = () => {
     const doFindPeople = async () => {
         
         const response = await axios
-        .get('http://localhost:5000/api/v1/scraper/google/findpeople', {params: {query}})
+        .get('/api/v1/scraper/google/findpeople', {params: {query}})
         .catch((err) => {
             console.log(err);
             

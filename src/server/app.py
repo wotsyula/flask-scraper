@@ -9,7 +9,7 @@ from flask_migrate import Migrate
 from werkzeug.exceptions import HTTPException
 from werkzeug.middleware.proxy_fix import ProxyFix
 
-from .config import DefaultConfig
+from .config import DefaultConfig, STATIC_DIR
 from .routes import index
 
 def create_app(name):
@@ -21,7 +21,11 @@ def create_app(name):
     Returns:
         flask.Flask: Flask `app` instance
     """
-    application = Flask(name)
+    application = Flask(
+        name,
+        static_url_path='', 
+        static_folder=STATIC_DIR,
+    )
     cfg = DefaultConfig()
 
     application.config.from_object(cfg)

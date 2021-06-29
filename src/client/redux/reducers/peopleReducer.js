@@ -16,20 +16,19 @@ export const peopleReducer = (state = initialState, {type, results}) => {
 
     switch(type) {
         case ActionTypes.FIND_PEOPLE:
-            return {...state, status: 'running'};
+            return {...initialState, status: 'running'};
 
         case ActionTypes.FIND_PEOPLE_STATUS:
-            debugger;
             return {...state, status: results.result};
 
         case ActionTypes.FIND_PEOPLE_CANCEL:
             return {...state, status: (results.result)? null : 'running'};
 
         case ActionTypes.FIND_PEOPLE_RESULTS:
-            let nextState = {...state};
+            let nextState = {...state, byUrl: {...state.byUrl}};
 
             for(let result of results.result) {
-                nextState.byUrl = {...nextState.byUrl, [result.href]: result.text};
+                nextState.byUrl[result.href] = result.text;
 
                 if (/linkedin/.test(result.href)) {
                     nextState.linkedin = [...nextState.linkedin, result.href];

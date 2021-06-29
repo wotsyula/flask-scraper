@@ -16,7 +16,7 @@ const PeopleResults = () => {
         if (!status) return;
 
         const timer = setInterval(() => axios
-            .get('http://localhost:5000/api/v1/scraper/google/findpeople/results')
+            .get('/api/v1/scraper/google/findpeople/results')
             .then((response) => {
                 dispatch(findPeopleResults(response.data));
             })

@@ -6,9 +6,11 @@ Defines classes for managing configuration
 import os
 # pylint: disable=too-few-public-methods
 
-baseDir = os.path.abspath(os.path.dirname(__file__))
-
-templateDir = os.path.join(baseDir, 'templates')
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+TEMPLATE_DIR = os.path.join(BASE_DIR, 'templates')
+STATIC_DIR = os.path.abspath(
+    os.path.join(BASE_DIR, '../client/static')
+)
 
 class Config:
     """
