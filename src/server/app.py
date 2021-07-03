@@ -6,6 +6,7 @@ Fask application
 from flask import Flask, json, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+import gunicorn
 from werkzeug.exceptions import HTTPException
 from werkzeug.middleware.proxy_fix import ProxyFix
 
@@ -23,7 +24,7 @@ def create_app(name):
     """
     application = Flask(
         name,
-        static_url_path='', 
+        static_url_path='',
         static_folder=STATIC_DIR,
     )
     cfg = DefaultConfig()
@@ -76,7 +77,9 @@ def set_headers(response):
 
     Original source: https://github.com/postmanlabs/httpbin/blob/master/httpbin/core.py
     """
-    response.headers['Server'] = 'Apache/2.4.6 (CentOS) PHP/5.4.16'
+    gunicorn.SERVER_SOFTWARE = 'Apache/2.4.6 (CentOS) PHP/5.4.16'
+    response.headers['Server'] = gunicorn.SERVER_SOFTWARE
+
     response.headers['X-Powered-By'] = 'PHP / 5.4.16'
     response.headers['Access-Control-Allow-Origin'] = request.headers.get('Origin', '*')
     response.headers['Access-Control-Allow-Credentials'] = 'true'

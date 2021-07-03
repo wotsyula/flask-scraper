@@ -73,6 +73,7 @@ class Script (BaseClass):
             # 3rd attempt?
             if retries > 2:
                 raise err
-            else:
-                retries += 1
-                self.execute(retries=retries, **kwargs)
+
+            # try again
+            retries += 1
+            self.execute(retries=retries, **kwargs)

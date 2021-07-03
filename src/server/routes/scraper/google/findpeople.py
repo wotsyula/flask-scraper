@@ -165,5 +165,4 @@ class Script (BaseClass):
                 raise err
 
             # Try again
-            else:
-                self.execute(retries=retries + 1, **kwargs)
+            self.execute(retries=retries + 1, **kwargs)

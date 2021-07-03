@@ -342,8 +342,8 @@ class Script (ABC):
 
             if text == prev_text:
                 break
-            else:
-                prev_text = text
+
+            prev_text = text
 
         # close window
         self.driver.close()

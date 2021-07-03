@@ -9,6 +9,7 @@ RUN apt-get update && apt-get -y upgrade
 COPY requirements.txt requirements.txt
 
 RUN pip install -r requirements.txt
+RUN pip cache purge
 
 COPY src/server .
 

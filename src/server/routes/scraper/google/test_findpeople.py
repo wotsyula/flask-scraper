@@ -9,24 +9,10 @@ Tests for `findpeople` script.
 
 from functools import reduce
 import pytest
-from fake_useragent import UserAgent
 from selenium.webdriver.common.keys import Keys
 
 from .findpeople import Script
-from ..scraper import create_driver, create_script, Scraper
-
-@pytest.fixture
-def driver():
-    driver = create_driver(
-        **Scraper.DEFAULT_OPTIONS,
-        user_agent = UserAgent().chrome,
-    )
-
-    yield driver
-
-    driver.close()
-    driver.quit()
-
+from ..scraper import create_script
 
 @pytest.fixture
 def script(driver):

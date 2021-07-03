@@ -11,7 +11,6 @@ import os
 import time
 from typing import Generator
 
-from fake_useragent import UserAgent
 import pytest
 from selenium.webdriver.common.action_chains import ActionChains
 
@@ -47,19 +46,6 @@ MOCK_RESULT = [{
 class Script (BaseScript):
     def execute(self, **kwargs) -> Generator[dict, None, None]:
         yield MOCK_RESULT
-
-
-@pytest.fixture(scope='module')
-def driver():
-    driver = create_driver(
-        **Scraper.DEFAULT_OPTIONS,
-        user_agent = UserAgent().chrome,
-    )
-
-    yield driver
-
-    driver.close()
-    driver.quit()
 
 def test_validate_script():
 

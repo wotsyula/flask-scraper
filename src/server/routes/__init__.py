@@ -2,17 +2,8 @@
 """
 Defines root blueprint for all flask routes
 """
-import os
-from flask import Blueprint, jsonify, send_from_directory
-from werkzeug.utils import send_file
+from flask import Blueprint, jsonify, current_app
 from .scraper.routes import scraper
-
-STATIC_DIR = os.path.abspath(
-    os.path.join(
-        os.path.dirname(__file__),
-        '../../client/static'
-    )
-)
 
 index = Blueprint('index', __name__, url_prefix='/')
 
@@ -20,7 +11,14 @@ index.register_blueprint(scraper)
 
 @index.route('/', methods=['GET'])
 def get_index():
-    return send_file(os.path.join(STATIC_DIR, 'index.htm'))
+    """
+    Home page
+
+    Returns:
+        str: HTML
+    """
+    return current_app.send_static_file('index.htm')
+
 
 @index.route('/status', methods=['GET'])
 def get_status():
@@ -32,5 +30,5 @@ def get_status():
     return jsonify({
         "status": 0,
         "error": None,
-        "result": {},
+        "result": True,
     })
