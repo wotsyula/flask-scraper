@@ -7,10 +7,20 @@ import os
 import random
 import re
 import time
+
 from abc import ABC, abstractmethod
 from typing import Generator
+from urllib.parse import urlparse
+
+import requests
+from selenium.common.exceptions import (
+    MoveTargetOutOfBoundsException,
+    NoSuchElementException,
+    TimeoutException,
+)
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import wait, expected_conditions as EC
@@ -121,6 +131,29 @@ class Script (ABC):
         time.sleep(duration)
 
 
+    def user_agent(self) -> str:
+        """
+        Returns the current 'User-Agent' header of script.
+
+        Returns:
+            str: `navigator.userAgent`
+        """
+        return self.driver.execute_script('return navigator.userAgent')
+
+    def move_to(self, xpath: str):
+        """
+        Moves mouse to element found by xpath
+
+        Args:
+            xpath (str): XPath of element to move to
+        """
+        ActionChains(self.driver).move_to_element_with_offset(
+            self.driver.find_element_by_xpath(xpath),
+            random.randint(3, 8),
+            random.randint(3, 8),
+
+        ).perform()
+
     def xpath(self, xpath: str) -> WebElement:
         """
         Returns element found at XPath
@@ -131,7 +164,7 @@ class Script (ABC):
         # wait for element to become available
         element_exists = EC.presence_of_element_located((By.XPATH, xpath))
 
-        return self.wait.until(element_exists)
+        return wait.WebDriverWait(self.driver, 30).until(element_exists)
 
 
     def click(self, xpath: str) -> None:
@@ -141,11 +174,15 @@ class Script (ABC):
         Args:
             xpath (str): XPath of element to click
         """
+        self.move_to(xpath)
+
         element_clickable = EC.element_to_be_clickable((By.XPATH, xpath))
 
-        self.wait.until(element_clickable).click()
-        self.sleep(2)
+        wait.WebDriverWait(self.driver, 30).until(element_clickable)
 
+        ActionChains(self.driver).click().perform()
+
+        self.sleep(2)
 
     def send_keys(self, xpath: str, keys: str, click = False) -> WebElement:
         """
@@ -153,7 +190,8 @@ class Script (ABC):
 
         Args:
             xpath (str): XPath of element to click
-            click (bool, optional): If `True` will click on element before sending keys. Defaults to False.
+            click (bool, optional): If `True` will click on element before sending keys.
+                                    Defaults to False.
         """
         # click element
         if click:
@@ -161,12 +199,226 @@ class Script (ABC):
 
         # enter characters with delay between keystrokes
         element_exists = EC.presence_of_element_located((By.XPATH, xpath))
+        driver_wait = wait.WebDriverWait(self.driver, 10)
 
-        self.wait.until(element_exists).clear()
+        driver_wait.until(element_exists).clear()
 
         for char in keys:
-            self.wait.until(element_exists).send_keys(char)
+            driver_wait.until(element_exists).send_keys(char)
             time.sleep(random.randint(100,400) / 1000)
+
+
+    def scroll_to_bottom(self):
+        """
+        Scrolls to the bottom of the current page.
+        """
+        # scroll down
+        curr_x = 0
+        count = 0
+
+        while(
+            count < 10
+            and self.driver.execute_script(
+                'return document.body.scrollHeight - window.scrollY',
+            ) > 1100
+        ):
+            # move mouse
+            if curr_x > 200:
+                delta_x = random.randint(-5, -1)
+            elif curr_x < 100:
+                delta_x = random.randint(1, 5)
+            else:
+                delta_x = random.randint(-3, 3)
+
+            curr_x += delta_x
+            count += 1
+
+            try:
+                ActionChains(self.driver).move_by_offset(delta_x, 0).perform()
+            except MoveTargetOutOfBoundsException:
+                pass
+
+            # scroll down
+            ActionChains(self.driver).send_keys(Keys.PAGE_DOWN).perform()
+            self.sleep(2)
+
+        # go to bottom of page
+        self.driver.execute_script(
+            'window.scrollTo({left: 0, top: document.body.scrollHeight, behaviour: "smooth"});'
+        )
+        self.sleep(1)
+
+    def download(self, url: str) -> str:
+        """
+        Downloads a file from the internet.
+
+        Args:
+            url (str): url of file to download
+
+        Returns:
+            str: returns the path to the downloaded file
+        """
+        # fetch url into file
+        user_agent = self.driver.execute_script(
+            "return navigator.userAgent;",
+        )
+
+        response = requests.get(
+            url,
+            headers = {
+                'User-Agent': user_agent,
+                'Referer': self.driver.current_url,
+            },
+            stream = True,
+        )
+
+        filename = os.path.abspath(
+            os.path.basename(
+                urlparse(url).path,
+            )
+        )
+
+        with open(filename, "wb") as handle:
+            for data in response.iter_content():
+                handle.write(data)
+
+        return filename
+
+
+    def is_recaptcha(self):
+        """
+        Checks for Google `ReCaptcha` input.
+        See: https://www.google.com/recaptcha/about/
+
+        Returns:
+            bool: `True` if found and `False` otherwise
+        """
+
+        try:
+            element_exists = EC.presence_of_element_located((
+                By.XPATH,
+                '//iframe[contains(@src, "google.com/recaptcha")]',
+            ))
+
+            wait.WebDriverWait(self.driver, 4).until(element_exists)
+
+            return True
+
+        except (NoSuchElementException, TimeoutException):
+            pass
+
+        return False
+
+
+    def audio_to_text(self, path: str) -> str:
+        """
+        Converts audio file to text.
+
+        Args:
+            path (str): path to mp3 or mp4 file
+
+        Returns:
+            str: the converted text or `None`
+        """
+        # open new window
+        self.driver.execute_script('window.open("","_blank");')
+        self.driver.switch_to.window(self.driver.window_handles[1])
+
+        # navigate to watson
+        self.driver.get('https://speech-to-text-demo.ng.bluemix.net')
+
+        # enter upload file
+        self.xpath('//*[@accept]').send_keys(path)
+        time.sleep(5)
+
+        # grab text
+        prev_text = None
+
+        while True:
+            # wait for processing
+            time.sleep(5)
+
+            text = self.xpath('//*[@data-id="Text"]').text.strip()
+
+            if text == prev_text:
+                break
+            else:
+                prev_text = text
+
+        # close window
+        self.driver.close()
+        self.driver.switch_to.window(self.driver.window_handles[0])
+
+        return text
+
+
+    def solve_recaptcha(self):
+        """
+        Attempts to solve Google `ReCaptcha` input.
+        See: https://www.google.com/recaptcha/about/
+
+        Returns:
+            bool: `True` if successfull and `False` otherwise
+        """
+        try:
+            # click captcha
+            self.sleep(5)
+            self.driver.switch_to.default_content()
+            self.move_to('//*[contains(@class,"g-recaptcha")]')
+            ActionChains(self.driver).click().perform()
+        except (NoSuchElementException, TimeoutException):
+            return False
+
+        # enter audio check
+        try:
+            self.sleep(10)
+            self.driver.switch_to.frame(
+                self.driver.find_element_by_xpath('//iframe[contains(@title,"recaptcha")]')
+            )
+            self.move_to('//*[contains(@class, "rc-button-audio")]')
+            ActionChains(self.driver).click().perform()
+            self.sleep(10)
+
+            # listen to audio
+            for unused in range(random.randint(2,6)):
+                ActionChains(self.driver).send_keys(Keys.SPACE).perform()
+                time.sleep(random.randint(8000, 14000) / 1000)
+
+        except (NoSuchElementException, TimeoutError):
+            return True
+
+
+        try:
+            # fetch/translate audio
+            url = self.xpath('//*[contains(@href, "mp3")]').get_attribute('href')
+            path = self.download(url)
+            text = self.audio_to_text(path)
+
+            os.remove(path)
+
+            # enter audio
+            ActionChains(self.driver).send_keys(Keys.TAB).perform()
+
+            for char in text + Keys.ENTER:
+                time.sleep(random.randint(100,400) / 1000)
+                ActionChains(self.driver).send_keys(char).perform()
+
+            # check results
+            time.sleep(5)
+
+            error = self.driver.find_element_by_class_name('rc-audiochallenge-error-message')
+
+            self.driver.switch_to.default_content()
+
+            if error:
+                return not error.text
+
+            return True
+
+        except (NoSuchElementException, TimeoutException):
+            ActionChains(self.driver).send_keys(Keys.ESCAPE).perform()
+
+        return False
 
 
     @abstractmethod
@@ -175,7 +427,7 @@ class Script (ABC):
         Executes the script using `driver`.
 
         Returns:
-            list[dict]: Returns a list of `dict` values
+            Generator[dict, None, None]: Returns a list of `dict` values
         """
 
     def __init__(self, driver: WebDriver, **kwargs) -> None:

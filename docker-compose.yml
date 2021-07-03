@@ -2,6 +2,7 @@ version: '3.9'
 services:
   flask:
     build: .
+    image: wotsyula/flask-scraper
     environment:
       - PYTHONUNBUFFERED=0
       - DATABASE_URI=postgresql://postgres:postgres@postgres/postgres
@@ -11,12 +12,10 @@ services:
     depends_on:
       - selenium
   selenium:
-    container_name: selenium
-    image: selenium/standalone-chrome:latest
-    environment: 
-      - SE_NODE_SESSION_TIMEOUT=30
-      - SE_NODE_MAX_SESSIONS=16
-      - SE_NODE_OVERRIDE_MAX_SESSIONS=true
+    build:
+      context: ./composer
+      dockerfile: standalone-chrome
+    image: wotsyula/selenium:latest
     ports:
       - "5900:5900"
     shm_size: 256M

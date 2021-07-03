@@ -5,9 +5,11 @@ Tests for `findpeople` script.
 # pylint: disable=too-few-public-methods
 # pylint: disable=missing-class-docstring
 # pylint: disable=missing-function-docstring
+# pylint: disable=redefined-outer-name
 
 from functools import reduce
 import pytest
+from fake_useragent import UserAgent
 from selenium.webdriver.common.keys import Keys
 
 from .findpeople import Script
@@ -15,7 +17,15 @@ from ..scraper import create_driver, create_script, Scraper
 
 @pytest.fixture
 def driver():
-    return create_driver(**Scraper.DEFAULT_OPTIONS)
+    driver = create_driver(
+        **Scraper.DEFAULT_OPTIONS,
+        user_agent = UserAgent().chrome,
+    )
+
+    yield driver
+
+    driver.close()
+    driver.quit()
 
 
 @pytest.fixture
@@ -23,6 +33,9 @@ def script(driver):
     return create_script('google/findpeople', driver)
 
 class TestScript:
+    def click_next_link(self, script: Script):
+        pass
+
     def test_go_to_next(self, script: Script):
         """
         Test if `go_to_next()` controls page navigation
@@ -47,7 +60,7 @@ class TestScript:
         assert script.go_to_next() is True \
             , 'Should return True'
 
-        assert ' 2 ' in script.xpath('//*[@id="result-stats"]').text \
+        assert ' 2' in script.xpath('//footer/div|//*[@id="result-stats"]').text \
             , 'Should navigate to second page'
 
         assert script.current_page == 2 \
@@ -56,7 +69,7 @@ class TestScript:
         # go to next page
         script.go_to_next()
 
-        assert ' 3 ' in script.xpath('//*[@id="result-stats"]').text \
+        assert ' 3' in script.xpath('//footer/div|//*[@id="result-stats"]').text \
             , 'Should navigate to second page'
 
         assert script.current_page == 3 \

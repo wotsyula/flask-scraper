@@ -5,8 +5,13 @@ Script that finds people on `google.com`
 Searches for linkedin accounts, twitter accounts, facebook accounts.
 """
 
+from time import sleep
 from typing import Generator
-from selenium.common.exceptions import NoSuchElementException, StaleElementReferenceException, TimeoutException
+from selenium.common.exceptions import (
+    NoSuchElementException,
+    StaleElementReferenceException,
+    TimeoutException
+)
 from selenium.webdriver.common.keys import Keys
 
 from ..script import Script as BaseClass
@@ -21,6 +26,31 @@ class Script (BaseClass):
     See `Scraper.scrape()` function.
     """
 
+    def click_next_link(self):
+        """
+        Clicks on the next page link of google search results.
+        """
+        try:
+            # click on next page link
+            text = str(self.current_page + 1)
+
+            self.sleep(4)
+            self.click(
+                f'(//footer//*[contains(text(),">")]|//*[text()="{text}"]|//h3/div[@class])[last()]'
+            )
+
+            # update page pointer
+            self.current_page += 1
+
+        except (NoSuchElementException, TimeoutException, StaleElementReferenceException):
+            # click show ommited results link
+            self.click('//*[contains(@href, "filter=0")]')
+
+            # update page pointer
+            self.current_page = 1
+
+        sleep(5)
+
     def go_to_next(self) -> bool:
         """
         Sends browser to next page.
@@ -33,33 +63,20 @@ class Script (BaseClass):
             return False
 
         try:
-            # navigate to bottom of page
-            self.send_keys('//*[@name="q"]', Keys.PAGE_DOWN + Keys.PAGE_DOWN + Keys.END)
+            self.scroll_to_bottom()
 
-            try:
-                # click on next page link
-                link_text = str(self.current_page + 1)
+            self.click_next_link()
 
-                self.driver.find_element_by_link_text(link_text).click()
-                self.sleep(4)
+            if self.is_recaptcha():
+                return self.solve_recaptcha()
 
-                # update page pointer
-                self.current_page += 1
-                return True
-
-            except (NoSuchElementException, TimeoutException, StaleElementReferenceException): 
-                # click show ommited results link
-                self.click('//*[contains(@href, "filter=0")]')
-
-                # update page pointer
-                self.current_page = 1
-
-                return True
+            return True
 
         except (TimeoutException, NoSuchElementException):
             pass
 
         return False
+
 
     def scrape_results(self) -> Generator[dict, None, None]:
         """
@@ -69,15 +86,25 @@ class Script (BaseClass):
             Generator[dict, None, None]: search result
         """
         try:
-            for link in self.driver.find_elements_by_xpath('//*[@id="search"]//a[@href]'):
+            user_agent = self.user_agent()
+
+            for link in self.driver.find_elements_by_xpath(
+                '//*[@id="search" or @id="rso" or @id="main"]//a[@href]',
+            ):
                 href: str = link.get_attribute('href')
-                
-                if len(link.text) < 4 or 'google.com' in href or 'googleusercontent.com' in href:
+
+                if \
+                    len(link.text) < 4 \
+                    or 'google.com' in href and not 'google.com/url?' in href \
+                    or 'googleusercontent.com' in href \
+                :
                     continue
 
                 yield {
                     'href': href,
                     'text': link.text,
+                    'userAgent': user_agent,
+                    'referer': self.driver.current_url,
                 }
 
         except (TimeoutException, NoSuchElementException):
@@ -105,8 +132,9 @@ class Script (BaseClass):
             if not self.go_to_next():
                 break
 
-    def execute(self, query: str = '', **kwargs) -> Generator[dict, None, None]:
+    def execute(self, **kwargs) -> Generator[dict, None, None]:
         options = {**self.options, **kwargs}
+        query = options.pop('query', '')
         retries = options.pop('retries', 0)
 
         # exit early if no query
@@ -120,6 +148,7 @@ class Script (BaseClass):
 
             # enter query
             new_query = query + SOCIAL_QUERY + Keys.ENTER
+
             self.send_keys('//*[@name="q"]', new_query, True)
 
             self.current_page = 1
@@ -134,6 +163,7 @@ class Script (BaseClass):
             # 3rd attempt?
             if retries > 2:
                 raise err
+
+            # Try again
             else:
-                retries += 1
-                self.execute(retries=retries, **kwargs)
+                self.execute(retries=retries + 1, **kwargs)

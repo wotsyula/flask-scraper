@@ -6,13 +6,22 @@ Tests for `findpeople` script.
 # pylint: disable=missing-class-docstring
 # pylint: disable=missing-function-docstring
 import pytest
+from fake_useragent.fake import UserAgent
 
 from .login import BAD_REQUEST, Script
 from ..scraper import create_driver, create_script, Scraper
 
 @pytest.fixture
 def driver():
-    return create_driver(**Scraper.DEFAULT_OPTIONS)
+    driver = create_driver(
+        **Scraper.DEFAULT_OPTIONS,
+        user_agent = UserAgent().chrome,
+    )
+
+    yield driver
+
+    driver.close()
+    driver.quit()
 
 
 @pytest.fixture

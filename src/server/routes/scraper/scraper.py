@@ -3,23 +3,19 @@
 Defines functions and classes for managing `Scraper` object.
 """
 import os
+import random
 from typing import Generator
-from fake_useragent import UserAgent
-from selenium import webdriver
-from selenium.webdriver import Remote as WebDriver, DesiredCapabilities, ChromeOptions
+from selenium.webdriver import Remote as WebDriver, ChromeOptions
 from selenium.webdriver.remote.webdriver import WebDriver
 
 from .script import create_script
 
 CHROME_URI = 'http://localhost:4444' \
     if not os.environ.get('SELENIUM_URI') else os.environ.get('SELENIUM_URI')
-CHROME_CAPABILITIES = DesiredCapabilities.CHROME
-CHROME_CAPABILITIES['prefs'] = {
-    'credentials_enable_service': False,
-    'profile.password_manager_enabled': False,
-}
-CHROME_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, ' \
-    + 'like Gecko) Chrome/91.0.4472.101 Safari/537.36 OPR/77.0.4054.90'
+CHROME_USER_AGENT   = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) ' \
+                    + 'AppleWebKit/537.36 (KHTML, like Gecko) ' \
+                    + 'Chrome/91.0.4472.101 ' \
+                    + 'Safari/537.36 OPR/77.0.4054.90'
 
 
 def generate_driver(timeout = 30, **kwargs) -> Generator[WebDriver, None, None]:
@@ -32,47 +28,57 @@ def generate_driver(timeout = 30, **kwargs) -> Generator[WebDriver, None, None]:
     Yields:
         Generator[WebDriver, None, None]: instance to use for scrapping
     """
+    timeout = kwargs.pop('timeout', 30)
+    user_agent = kwargs.pop('user_agent', CHROME_USER_AGENT)
 
     while True:
-        # generate user agent
-        # user_agent = UserAgent(cache=False, fallback=CHROME_UA).random
-
         # create driver options
         options = ChromeOptions()
 
-        # options.add_argument('--disable-extensions')
-        # options.add_argument('--disable-gpu')
-        # options.add_argument('--headless')
-        options.add_argument('--disable-notifications')
-        # options.add_argument(f'--user-agent="{user_agent}"')
-        options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        # change user agent
+        options.add_argument(f'--user-agent="{user_agent}"')
+        # disable automation extension
+        options.add_argument('--disable-blink-features=AutomationControlled')
+        options.add_experimental_option('excludeSwitches', ['enable-automation'])
         options.add_experimental_option('useAutomationExtension', False)
+
+        # configure browser settings
+        options.add_experimental_option('prefs',  {
+            'enable_do_not_track': True,                        # tell servers not to track us
+            'webkit.webprefs.encrypted_media_enabled': False,   # disable protected content
+        })
 
         driver = WebDriver(options=options, **kwargs)
 
-        # wait for elements
+        # set timeout for driver operations
         driver.implicitly_wait(timeout)
 
         # change view port
-        driver.set_window_size(1680, 990)
+        driver.set_window_size(
+            1300 + random.randint(1, 10) * 10,
+            900 + random.randint(2, 9) * 10,
+        )
 
         yield driver
 
         # close browser when done
+        driver.close()
         driver.quit()
 
 
-def create_driver(timeout = 30, **kwargs) -> WebDriver:
+def create_driver(**kwargs) -> WebDriver:
     """
     Creates a selenium `Webdriver` instance.
 
     Args:
-        timeout (int, optional): Value sent to `driver.implicitly_wait`. Defaults to 30.
+        **timeout (int): Value sent to `driver.implicitly_wait`. Defaults to 30.
+        **user_agent (str): User Agent header. Defaults to latest version of Chrome.
+        **kwargs (any): All extra arguments are forwarded to seleniums `Webdriver()` constructor
 
     Returns:
         WebDriver: instance to use for scrapping
     """
-    return next(generate_driver(timeout=timeout, **kwargs))
+    return next(generate_driver(**kwargs))
 
 class Scraper:
     """
@@ -81,11 +87,10 @@ class Scraper:
 
     DEFAULT_OPTIONS = {
         'command_executor': CHROME_URI,
-        'desired_capabilities': CHROME_CAPABILITIES,
     }
 
 
-    def scrape (self, path: str, **kwargs) -> list[dict]:
+    def scrape (self, path: str, **kwargs) -> Generator[dict, None, None]:
         """
         Executes a script in the `/scrapper` directory.
 
@@ -93,7 +98,7 @@ class Scraper:
             path (str): path to script in `/scrapper` directory
 
         Returns:
-            list[dict]: See `script.py:Script:execute`
+            Generator[dict, None, None]: See `script.py:Script:execute`
         """
         options = {**self.options, **kwargs}
         driver = create_driver(**self.options)
