@@ -3,10 +3,9 @@
 Fask application
 """
 
-from flask import Flask, json, request
+from flask import Flask, json, request, current_app
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-import gunicorn
 from werkzeug.exceptions import HTTPException
 from werkzeug.middleware.proxy_fix import ProxyFix
 
@@ -26,6 +25,7 @@ def create_app(name):
         name,
         static_url_path='',
         static_folder=STATIC_DIR,
+        
     )
     cfg = DefaultConfig()
 
@@ -40,24 +40,15 @@ def create_app(name):
 app = create_app(__name__)
 app.register_blueprint(index, url_prefix='/api/v1')
 
-@app.errorhandler(HTTPException)
-def handle_exception(err):
+@app.route('/', methods=['GET'])
+def get_index():
     """
-    Return JSON instead of HTML for HTTP errors.
+    Home page
+
+    Returns:
+        str: HTML
     """
-    app.logger.exception(err.name, exc_info=err)
-
-    # start with the correct headers and status code from the error
-    response = err.get_response()
-    # replace the body with JSON
-    response.content_type = 'application/json'
-    response.data = json.dumps({
-        'status': err.code,
-        'error': err.name,
-        'result': None
-    })
-
-    return response
+    return current_app.send_static_file('index.htm')
 
 @app.before_request
 def handle_wsgi_input_terminated():
@@ -77,9 +68,7 @@ def set_headers(response):
 
     Original source: https://github.com/postmanlabs/httpbin/blob/master/httpbin/core.py
     """
-    gunicorn.SERVER_SOFTWARE = 'Apache/2.4.6 (CentOS) PHP/5.4.16'
-    response.headers['Server'] = gunicorn.SERVER_SOFTWARE
-
+    response.headers['Server'] = 'Apache/2.4.6 (CentOS) PHP/5.4.16'
     response.headers['X-Powered-By'] = 'PHP / 5.4.16'
     response.headers['Access-Control-Allow-Origin'] = request.headers.get('Origin', '*')
     response.headers['Access-Control-Allow-Credentials'] = 'true'

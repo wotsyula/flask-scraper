@@ -38,10 +38,9 @@ def driver():
     Yields:
         WebDriver: selenium driver instance
     """
-    instance = create_driver(
-        **Scraper.DEFAULT_OPTIONS,
-        user_agent = UserAgent(cache=False, fallback=CHROME_USER_AGENT).chrome,
-    )
+
+    user_agent = UserAgent(cache=False, fallback=CHROME_USER_AGENT).chrome,
+    instance = create_driver(**Scraper.DEFAULT_OPTIONS, user_agent=user_agent)
 
     yield instance
 
