@@ -9,7 +9,7 @@ from flask.blueprints import Blueprint
 import pytest
 
 from .config import DefaultConfig
-from .routes.scraper.scraper import Scraper, create_driver
+from .routes.scraper.scraper import CHROME_USER_AGENT, Scraper, create_driver
 
 @pytest.fixture(scope='session')
 def create_app():
@@ -40,7 +40,7 @@ def driver():
     """
     instance = create_driver(
         **Scraper.DEFAULT_OPTIONS,
-        user_agent = UserAgent(cache=False).chrome,
+        user_agent = UserAgent(cache=False, fallback=CHROME_USER_AGENT).chrome,
     )
 
     yield instance
