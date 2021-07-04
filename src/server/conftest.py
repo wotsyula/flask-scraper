@@ -45,5 +45,9 @@ def driver() -> Generator[WebDriver, None, None]:
 
     yield instance
 
-    instance.close()
-    instance.quit()
+    # NOTE: prevent crashed sessions from failing tests
+    try:
+        instance.close()
+        instance.quit()
+    except Exception:
+        pass
