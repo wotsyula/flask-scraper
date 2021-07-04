@@ -3,10 +3,12 @@
 Defines fixtures for `server` module
 """
 # pylint: disable=missing-function-docstring
+from typing import Generator
 from fake_useragent.fake import UserAgent
 from flask.app import Flask
 from flask.blueprints import Blueprint
 import pytest
+from selenium.webdriver.remote.webdriver import WebDriver
 
 from .config import DefaultConfig
 from .routes.scraper.scraper import CHROME_USER_AGENT, Scraper, create_driver
@@ -31,15 +33,14 @@ def create_app():
     return result
 
 @pytest.fixture(scope='module')
-def driver():
+def driver() -> Generator[WebDriver, None, None]:
     """
     Returns an instance of selenium `WebDriver`.
 
     Yields:
         WebDriver: selenium driver instance
     """
-
-    user_agent = UserAgent(cache=False, fallback=CHROME_USER_AGENT).chrome,
+    user_agent = UserAgent(cache=False, fallback=CHROME_USER_AGENT).chrome
     instance = create_driver(**Scraper.DEFAULT_OPTIONS, user_agent=user_agent)
 
     yield instance

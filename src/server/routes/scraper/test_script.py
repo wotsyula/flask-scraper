@@ -160,6 +160,7 @@ class TestScript:
         assert script.is_recaptcha() \
             , 'Should return `true` if recaptcha field is present'
 
+    @pytest.mark.skip(reason="must be tested manually")
     def test_audio_to_speech(self, script: Script):
         expected = 'Okay we\'re trying this for a second time to test the ' \
                  + 'ability to upload and MP 3 files hopefully this will work.'
@@ -170,6 +171,7 @@ class TestScript:
         assert test == expected \
             , 'Should return converted text'
 
+    @pytest.mark.skip(reason="must be tested manually")
     def test_solve_recaptcha(self, script: Script):
         # go to test form
         # script.driver.get('https://recaptcha-demo.appspot.com/recaptcha-v2-invisible.php')

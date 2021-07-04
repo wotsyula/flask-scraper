@@ -1,8 +1,7 @@
-FROM selenium/standalone-chrome:latest
+FROM selenium/standalone-chrome:91.0
 
 RUN sed -i 's/doc || document/doc || window  /g' /opt/selenium/chromedriver*
 RUN sed -i 's/cdc_/dcda/g' /opt/selenium/chromedriver*
 
 ENV SE_NODE_SESSION_TIMEOUT=60
 ENV SE_NODE_MAX_SESSIONS=16
-ENV SE_NODE_OVERRIDE_MAX_SESSIONS=true

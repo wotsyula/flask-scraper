@@ -1,2 +1,2 @@
-# flask-scrapper
-Scrapper engine based on selenium python bindings. Uses Flask for its API and ReactJS for the client.
+# flask-scraper
+Scraper engine based on Selenium Python bindings. Uses Flask for its API and ReactJS for the client.
