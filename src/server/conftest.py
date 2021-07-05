@@ -3,6 +3,7 @@
 Defines fixtures for `server` module
 """
 # pylint: disable=missing-function-docstring
+import time
 from typing import Generator
 from fake_useragent.fake import UserAgent
 from flask.app import Flask
@@ -43,6 +44,9 @@ def driver() -> Generator[WebDriver, None, None]:
     """
     user_agent = UserAgent(cache=False, fallback=CHROME_USER_AGENT).chrome
     instance = create_driver(**Scraper.DEFAULT_OPTIONS, user_agent=user_agent)
+
+    # let driver load
+    time.sleep(10)
 
     yield instance
 

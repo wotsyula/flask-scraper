@@ -22,13 +22,13 @@ class Script (BaseClass):
     See `Scraper.scrape()` function.
     """
 
-    def execute(self, user_name = '', user_pass = '',  **kwargs) -> Generator[dict, None, None]:
+    def execute(self, **kwargs) -> Generator[dict, None, None]:
         """
         Attempts to log into website.
 
         Args:
-            user_name (str, optional): email address of google user. Defaults to ''.
-            user_pass (str, optional): password of google user. Defaults to ''.
+            **user_name (str, optional): email address of google user. Defaults to ''.
+            **user_pass (str, optional): password of google user. Defaults to ''.
 
         Raises:
             TimeoutException: if required elements are not found on page
@@ -37,6 +37,8 @@ class Script (BaseClass):
             Generator[dict, None, None]: [description]
         """
         options = {**self.options, **kwargs}
+        user_name = options.pop('user_name', '')
+        user_pass = options.pop('user_pass', '')
         retries = options.pop('retries', 0)
 
         # exit early if no user name / pass

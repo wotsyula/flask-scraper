@@ -3,10 +3,9 @@
 Fask application
 """
 
-from flask import Flask, json, request, current_app
+from flask import Flask, request, current_app
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from werkzeug.exceptions import HTTPException
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from .config import DefaultConfig, STATIC_DIR
@@ -25,7 +24,7 @@ def create_app(name):
         name,
         static_url_path='',
         static_folder=STATIC_DIR,
-        
+
     )
     cfg = DefaultConfig()
 
@@ -38,6 +37,7 @@ def create_app(name):
     return application
 
 app = create_app(__name__)
+
 app.register_blueprint(index, url_prefix='/api/v1')
 
 @app.route('/', methods=['GET'])
