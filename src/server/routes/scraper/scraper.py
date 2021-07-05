@@ -37,6 +37,10 @@ def generate_driver(timeout = 30, **kwargs) -> Generator[WebDriver, None, None]:
 
         # change user agent
         options.add_argument(f'--user-agent="{user_agent}"')
+
+        # disable features not compatible with docker
+        options.add_argument('--no-sandbox')
+
         # disable automation extension
         options.add_argument('--disable-blink-features=AutomationControlled')
         options.add_experimental_option('excludeSwitches', ['enable-automation'])

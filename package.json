@@ -4,7 +4,9 @@
   "description": "Scrapper engine based on selenium python bindings. Uses Flask for its API and ReactJS for the client.",
   "scripts": {
     "start": "webpack serve",
-    "test": "mocha"
+    "test": "mocha",
+    "build": "webpack build",
+    "watch": "webpack build --watch"
   },
   "repository": {
     "type": "git",

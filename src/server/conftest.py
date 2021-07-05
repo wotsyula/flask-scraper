@@ -34,7 +34,7 @@ def create_app():
 
     return result
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='function')
 def driver() -> Generator[WebDriver, None, None]:
     """
     Returns an instance of selenium `WebDriver`.

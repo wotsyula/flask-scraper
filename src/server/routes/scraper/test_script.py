@@ -123,7 +123,6 @@ class TestScript:
     def test_send_keys(self, script):
         pass
 
-    @pytest.mark.skip(reason="must be tested manually")
     def test_move_to(self, script: Script):
         script.driver.get('https://schema.org/LocalBusiness')
 
