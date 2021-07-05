@@ -22,5 +22,5 @@ def test_get_status(client: FlaskClient):
     assert response.status_code == 200 \
         , 'Should return status code 200'
 
-    assert response.json == {'error': None, 'result': {}, 'status': 0} \
+    assert response.json == {'error': None, 'result': True, 'status': 0} \
         , 'Should return an empty response'

@@ -8,6 +8,7 @@ from fake_useragent.fake import UserAgent
 from flask.app import Flask
 from flask.blueprints import Blueprint
 import pytest
+from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.remote.webdriver import WebDriver
 
 from .config import DefaultConfig
@@ -49,5 +50,5 @@ def driver() -> Generator[WebDriver, None, None]:
     try:
         instance.close()
         instance.quit()
-    except Exception:
+    except WebDriverException:
         pass

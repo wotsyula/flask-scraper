@@ -6,8 +6,8 @@ Tests for `blueprint` module.
 # pylint: disable=missing-class-docstring
 # pylint: disable=missing-function-docstring
 
+import time
 import pytest
-from concurrent.futures import TimeoutError
 from flask import url_for
 from flask.testing import FlaskClient
 
@@ -61,8 +61,8 @@ def test_get_site_script_status(client: FlaskClient):
     assert response.json['error'] is None \
         , 'Should return no error'
 
-    assert response.json['result'] is None \
-        , 'Should return an empty result'
+    assert response.json['result'] == 'running' or response.json['result'] == None \
+        , 'Should return a status'
 
 def test_get_site_script_cancel(client: FlaskClient):
     client.get(url_for('scraper.get_site_script', site='test_script'))

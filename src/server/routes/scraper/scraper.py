@@ -100,11 +100,10 @@ class Scraper:
         Returns:
             Generator[dict, None, None]: See `script.py:Script:execute`
         """
-        options = {**self.options, **kwargs}
         driver = create_driver(**self.options)
-        script = create_script(path, driver, **options)
+        script = create_script(path, driver, **self.options)
 
-        return script.execute(**options)
+        return script.execute(**kwargs)
 
 
     def __init__(self, **kwargs) -> None:

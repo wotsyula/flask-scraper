@@ -16,6 +16,7 @@ from ..scraper import create_driver, create_script, Scraper
 def script(driver):
     return create_script('google/login', driver)
 
+@pytest.mark.skip(reason="must be tested manually")
 class TestScript:
     def test_execute(self, script: Script):
         script.driver.get('http://example.com/')

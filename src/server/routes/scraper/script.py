@@ -426,7 +426,11 @@ class Script (ABC):
         """
         Executes the script using `driver`.
 
-        Returns:
+        Args:
+            **kwargs (dict[str, any]): Used to pass arguments to script
+
+
+        Yields:
             Generator[dict, None, None]: Returns a list of `dict` values
         """
 
