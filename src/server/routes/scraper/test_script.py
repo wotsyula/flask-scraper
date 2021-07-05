@@ -21,7 +21,6 @@ from .script import (
     Script as BaseScript,
     create_script
 )
-from .scraper import Scraper, create_driver
 
 INVALID_PATHS = [
     None,
@@ -149,6 +148,15 @@ class TestScript:
 
         assert script.driver.execute_script('return window.scrollY') > 1000 \
             , 'Should scroll to bottom of page'
+
+    def test_download(self, script: Script):
+        script.driver.get('https://example.com')
+        script.download('https://example.com/index.htm')
+
+        assert os.path.isfile('Downloads/index.htm') \
+            , 'Should download a file'
+
+        os.remove('Downloads/index.htm')
 
     def test_is_recaptcha(self, script: Script):
         script.driver.get('http://example.com')

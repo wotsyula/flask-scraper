@@ -273,8 +273,9 @@ class Script (ABC):
         )
 
         filename = os.path.abspath(
-            os.path.basename(
-                urlparse(url).path,
+            os.path.join(
+                'Downloads/',
+                os.path.basename(urlparse(url).path)
             )
         )
 
