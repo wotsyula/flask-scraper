@@ -2,7 +2,7 @@
 
 FROM python:slim-buster
 
-WORKDIR /usr/src/server
+WORKDIR /usr/src
 
 RUN mkdir Downloads
 RUN mkdir Profile
@@ -12,8 +12,8 @@ COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 RUN pip cache purge
 
-COPY src/server .
+COPY src .
 
 EXPOSE 5000
 
-CMD [ "python", "-m" , "gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "app:app" ]
+CMD [ "python", "-m" , "gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "server.app:app" ]
