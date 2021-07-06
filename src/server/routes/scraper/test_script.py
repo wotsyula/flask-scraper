@@ -152,10 +152,10 @@ class TestScript:
         script.driver.get('https://example.com')
         script.download('https://example.com/index.htm')
 
-        assert os.path.isfile('Downloads/index.htm') \
+        assert os.path.isfile('index.htm') \
             , 'Should download a file'
 
-        os.remove('Downloads/index.htm')
+        os.remove('index.htm')
 
     def test_is_recaptcha(self, script: Script):
         script.driver.get('http://example.com')

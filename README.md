@@ -69,8 +69,6 @@ Scraper engine based on [Selenium](https://www.selenium.dev) Python bindings. Us
 |       +-- conftest.py         # pytest configuration file
 |       +-- routes
 |           +-- scrapper        # scripts are stored here
-+-- Downloads                   # downloaded files placed here
-+-- Profile                     # browser data (ie cookies) stored here
 +-- .browserlist                # configuration used by babel-loader
 +-- .babelrc                    # babel-loader configuration file
 +-- docker-compose.yml          # docker service configuration

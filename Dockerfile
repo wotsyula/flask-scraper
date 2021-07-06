@@ -4,8 +4,6 @@ FROM python:slim-buster
 
 WORKDIR /usr/src
 
-RUN mkdir Downloads
-RUN mkdir Profile
 RUN apt-get update && apt-get -y upgrade
 
 COPY requirements.txt requirements.txt

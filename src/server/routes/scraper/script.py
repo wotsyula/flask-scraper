@@ -273,10 +273,7 @@ class Script (ABC):
         )
 
         filename = os.path.abspath(
-            os.path.join(
-                'Downloads/',
-                os.path.basename(urlparse(url).path)
-            )
+            os.path.basename(urlparse(url).path)
         )
 
         with open(filename, "wb") as handle:
