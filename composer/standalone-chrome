@@ -1,7 +1,4 @@
 FROM selenium/standalone-chrome:91.0
 
-RUN sed -i 's/doc || document/doc || window  /g' /opt/selenium/chromedriver*
-RUN sed -i 's/cdc_/dcda/g' /opt/selenium/chromedriver*
-
-ENV SE_NODE_SESSION_TIMEOUT=60
-ENV SE_NODE_MAX_SESSIONS=16
+RUN x11vnc -storepasswd flaskscraper@123 /home/seluser/.vnc/passwd
+RUN sed -i 's/\$cdc_asdjflasutopfhvcZLmcfl_/__webpack__debug            /g' /opt/selenium/chromedriver-91.0.4472.19

@@ -19,13 +19,23 @@ def script(driver):
     return create_script('google/findpeople', driver)
 
 class TestScript:
-    def click_next_link(self, script: Script):
+    def click_next_page_link(self, script: Script):
         pass
 
-    def test_go_to_next(self, script: Script):
+    def test_go_to_next_page(self, script: Script):
         """
         Test if `go_to_next()` controls page navigation
         """
+
+        script.current_page = 0
+
+        assert script.go_to_next_page() is False \
+            , 'Should do nothing if current page is 0 or lower'
+
+        script.current_page = 99
+
+        assert script.go_to_next_page() is False \
+            , 'Should do nothing if current page is `max_page`'
 
         # go to google.com website
         if 'google.com/search' not in script.driver.current_url:
@@ -34,16 +44,10 @@ class TestScript:
         # enter search term
         script.send_keys('//*[@name="q"]', 'web development' + Keys.ENTER)
 
-        # go to 1st page
-        script.current_page = 0
-
-        assert script.go_to_next() is False \
-            , 'Should do nothing if current page is 0 or lower'
-
         # go to 2nd page
         script.current_page = 1
 
-        assert script.go_to_next() is True \
+        assert script.go_to_next_page() is True \
             , 'Should return True'
 
         assert ' 2' in script.xpath('//footer/div|//*[@id="result-stats"]').text \
@@ -52,8 +56,8 @@ class TestScript:
         assert script.current_page == 2 \
             , 'Should update page pointer'
 
-        # go to next page
-        script.go_to_next()
+        # go to 3rd page
+        script.go_to_next_page()
 
         assert ' 3' in script.xpath('//footer/div|//*[@id="result-stats"]').text \
             , 'Should navigate to second page'
@@ -61,11 +65,25 @@ class TestScript:
         assert script.current_page == 3 \
             , 'Should update page pointer'
 
-        # go to page 100
-        script.current_page = 99
+    def test_go_to_page(self, script: Script):
+        # go to google.com website
+        if 'google.com/search' not in script.driver.current_url:
+            script.driver.get('https://google.com')
 
-        assert script.go_to_next() is False \
-            , 'Should do nothing if current page is 99 or higher'
+        # enter search term
+        script.send_keys('//*[@name="q"]', 'engineering degree' + Keys.ENTER)
+
+        # go to 4th page
+        script.current_page = 1
+
+        assert script.go_to_page(4) is True \
+            , 'Should return True'
+
+        assert ' 4' in script.xpath('//footer/div|//*[@id="result-stats"]').text \
+            , 'Should navigate to second page'
+
+        assert script.current_page == 4 \
+            , 'Should update page pointer'
 
     def test_scrape_results(self, script):
         """
@@ -106,6 +124,8 @@ class TestScript:
         query = 'swimming instructor (inurl:linkedin|inurl:twitter|inurl:facebook)'
 
         script.send_keys('//*[@name="q"]', query + Keys.ENTER)
+
+        script.current_page = 1
 
         # get results
         results = []

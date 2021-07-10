@@ -56,3 +56,26 @@ def driver() -> Generator[WebDriver, None, None]:
         instance.quit()
     except WebDriverException:
         pass
+
+@pytest.fixture(scope='function')
+def session_driver() -> Generator[WebDriver, None, None]:
+    """
+    Returns an instance of selenium `WebDriver`.
+
+    Yields:
+        WebDriver: selenium driver instance
+    """
+    instance = create_driver(**Scraper.DEFAULT_OPTIONS, save_session=True)
+
+    # let driver load
+    time.sleep(10)
+
+    yield instance
+
+    # NOTE: prevent crashed sessions from failing tests
+    try:
+        instance.close()
+        instance.quit()
+
+    except WebDriverException:
+        pass

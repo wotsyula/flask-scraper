@@ -29,7 +29,8 @@ Scraper engine based on [Selenium](https://www.selenium.dev) Python bindings. Us
     ```bash
     npm run build
 
-4. Edit `docker-compose.yml` with your PostgreSQL database. Afterwards start the service with:
+4. Edit `composer/standalone-chrome` with your VNC password. Replace `flaskscraper@123`.
+5. Edit `docker-compose.yml` with your PostgreSQL database. Afterwards start the service with:
     ```bash
     sudo docker compose up
     ```
@@ -38,7 +39,7 @@ Scraper engine based on [Selenium](https://www.selenium.dev) Python bindings. Us
     ```powershell
     docker compose up
     ```
-5. Navigate to home page:
+6. Navigate to home page:
     ```
     http://localhost:5000
     ```

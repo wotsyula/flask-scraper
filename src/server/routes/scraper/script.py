@@ -11,7 +11,6 @@ import time
 from abc import ABC, abstractmethod
 from typing import Generator
 from urllib.parse import urlparse
-
 import requests
 from selenium.common.exceptions import (
     MoveTargetOutOfBoundsException,
@@ -47,8 +46,7 @@ def validate_script(path: str) -> bool:
     Returns:
         bool: `True` if valid and `False` otherwise.
     """
-    return isinstance(path, str) and len(path) > 0
-
+    return isinstance(path, str) and len(path) > 1
 
 def sanitize_script(path: str) -> str:
     """
@@ -65,19 +63,17 @@ def sanitize_script(path: str) -> str:
     Returns:
         str: module or `None` if unavailable
     """
-
-    if validate_script(path) is not True:
+    if not validate_script(path):
         raise TypeError(f'path must be a non empty string ({path})')
 
     module = re.search(r'^([A-Za-z_]+/?)+$', path)
 
-    if isinstance(module, re.Match) is not True:
+    if not isinstance(module, re.Match):
         raise TypeError(f'invalid path {path})')
 
     module = '..' + module.group().rstrip('/').replace('/', '.')
 
     return module
-
 
 def load_script(path) -> any:
     """
@@ -93,10 +89,9 @@ def load_script(path) -> any:
     module = sanitize_script(path)
 
     if module:
-        module = importlib.import_module(module, __name__)
+        return importlib.import_module(module, __name__)
 
-    return module
-
+    return None
 
 class Script (ABC):
     # pylint: disable=too-few-public-methods
@@ -122,7 +117,7 @@ class Script (ABC):
         Raises:
             TypeError: if not multiplier > 1
         """
-        if not isinstance(multiplier, int) or multiplier < 1:
+        if multiplier < 1:
             raise TypeError('multiplier should be an number larger than 0')
 
         # Get duration to wait in milliseconds
@@ -130,7 +125,7 @@ class Script (ABC):
 
         time.sleep(duration)
 
-
+    @property
     def user_agent(self) -> str:
         """
         Returns the current 'User-Agent' header of script.
@@ -138,7 +133,32 @@ class Script (ABC):
         Returns:
             str: `navigator.userAgent`
         """
-        return self.driver.execute_script('return navigator.userAgent')
+        return self.driver.execute_script('return navigator.userAgent;')
+
+    @property
+    def cookies(self) -> dict:
+        """
+        Returns all set cookies as a dict.
+
+        Returns:
+            dict: set cookies
+        """
+        cookies = {}
+
+        for cookie in self.driver.get_cookies():
+            cookies[cookie['name']] = cookie['value']
+
+        return cookies
+
+    @property
+    def page(self) -> int:
+        """
+        Returns the current page the script is on
+
+        Returns:
+            int: current page
+        """
+        return self.current_page
 
     def move_to(self, xpath: str):
         """
@@ -148,7 +168,7 @@ class Script (ABC):
             xpath (str): XPath of element to move to
         """
         ActionChains(self.driver).move_to_element_with_offset(
-            self.driver.find_element_by_xpath(xpath),
+            self.driver.find_element(By.XPATH, xpath),
             random.randint(3, 8),
             random.randint(3, 8),
 
@@ -166,6 +186,15 @@ class Script (ABC):
 
         return wait.WebDriverWait(self.driver, 30).until(element_exists)
 
+    def exists(self, xpath: str) -> bool:
+
+        try:
+            element_exists = EC.presence_of_element_located((By.XPATH, xpath))
+
+            wait.WebDriverWait(self.driver, 0).until(element_exists)
+            return True
+        except (NoSuchElementException, TimeoutException):
+            return False
 
     def click(self, xpath: str) -> None:
         """
@@ -193,9 +222,11 @@ class Script (ABC):
             click (bool, optional): If `True` will click on element before sending keys.
                                     Defaults to False.
         """
-        # click element
+        # focus element
         if click:
             self.click(xpath)
+        else:
+            self.move_to(xpath)
 
         # enter characters with delay between keystrokes
         element_exists = EC.presence_of_element_located((By.XPATH, xpath))
@@ -259,22 +290,17 @@ class Script (ABC):
             str: returns the path to the downloaded file
         """
         # fetch url into file
-        user_agent = self.driver.execute_script(
-            "return navigator.userAgent;",
-        )
-
         response = requests.get(
             url,
             headers = {
-                'User-Agent': user_agent,
+                'User-Agent': self.user_agent,
                 'Referer': self.driver.current_url,
             },
+            cookies=self.cookies,
             stream = True,
         )
 
-        filename = os.path.abspath(
-            os.path.basename(urlparse(url).path)
-        )
+        filename = os.path.abspath(os.path.basename(urlparse(url).path))
 
         with open(filename, "wb") as handle:
             for data in response.iter_content():
@@ -298,7 +324,7 @@ class Script (ABC):
                 '//iframe[contains(@src, "google.com/recaptcha")]',
             ))
 
-            wait.WebDriverWait(self.driver, 4).until(element_exists)
+            wait.WebDriverWait(self.driver, 1).until(element_exists)
 
             return True
 
@@ -320,22 +346,23 @@ class Script (ABC):
         """
         # open new window
         self.driver.execute_script('window.open("","_blank");')
-        self.driver.switch_to.window(self.driver.window_handles[1])
+        self.driver.switch_to.window(self.driver.window_handles[-1])
 
         # navigate to watson
         self.driver.get('https://speech-to-text-demo.ng.bluemix.net')
 
         # enter upload file
+        self.sleep(2)
         self.xpath('//*[@accept]').send_keys(path)
-        time.sleep(5)
+        time.sleep(8)
 
         # grab text
+        self.move_to('//*[@data-id="Text"]')
+
         prev_text = None
 
         while True:
             # wait for processing
-            time.sleep(5)
-
             text = self.xpath('//*[@data-id="Text"]').text.strip()
 
             if text == prev_text:
@@ -343,12 +370,13 @@ class Script (ABC):
 
             prev_text = text
 
+            time.sleep(5)
+
         # close window
         self.driver.close()
-        self.driver.switch_to.window(self.driver.window_handles[0])
+        self.driver.switch_to.window(self.driver.window_handles[-1])
 
         return text
-
 
     def solve_recaptcha(self):
         """
@@ -371,7 +399,7 @@ class Script (ABC):
         try:
             self.sleep(10)
             self.driver.switch_to.frame(
-                self.driver.find_element_by_xpath('//iframe[contains(@title,"recaptcha")]')
+                self.driver.find_element(By.XPATH, '//iframe[contains(@title,"recaptcha")]')
             )
             self.move_to('//*[contains(@class, "rc-button-audio")]')
             ActionChains(self.driver).click().perform()
@@ -388,6 +416,8 @@ class Script (ABC):
 
         try:
             # fetch/translate audio
+            self.move_to('//*[contains(@href, "mp3")]')
+
             url = self.xpath('//*[contains(@href, "mp3")]').get_attribute('href')
             path = self.download(url)
             text = self.audio_to_text(path)
@@ -404,7 +434,7 @@ class Script (ABC):
             # check results
             time.sleep(5)
 
-            error = self.driver.find_element_by_class_name('rc-audiochallenge-error-message')
+            error = self.driver.find_element(By.CLASS_NAME, 'rc-audiochallenge-error-message')
 
             self.driver.switch_to.default_content()
 
@@ -418,13 +448,15 @@ class Script (ABC):
 
         return False
 
-
     @abstractmethod
     def execute(self, **kwargs) -> Generator[dict, None, None]:
         """
         Executes the script using `driver`.
 
         Args:
+            **max_page (int): last page to scrape. Default to 99
+            **page (int): starting page to start scraping. Default to 1
+            **retries (int): number of times to retry execution. Default to 2
             **kwargs (dict[str, any]): Used to pass arguments to script
 
 
@@ -433,17 +465,15 @@ class Script (ABC):
         """
 
     def __init__(self, driver: WebDriver, **kwargs) -> None:
+        super().__init__()
 
         if isinstance(driver, WebDriver) is not True:
             raise TypeError('driver should be an instance of Webdriver')
 
-        super().__init__()
-
         self.options = {**self.DEFAULT_OPTIONS, **kwargs}
         self.driver = driver
-        self.action = ActionChains(self.driver)
-        self.wait = wait.WebDriverWait(self.driver, 30)
         self.current_page = 0
+        self.max_page = 99
 
 def create_script(path: str, driver: WebDriver, **kwargs) -> Script:
     """
@@ -461,7 +491,7 @@ def create_script(path: str, driver: WebDriver, **kwargs) -> Script:
     """
     mod = load_script(path)
 
-    if hasattr(mod, "Script") is not True or isinstance(mod.Script, type) is not True:
+    if not hasattr(mod, 'Script') or not isinstance(mod.Script, type):
         raise Exception(f'invalid module ({path})')
 
     return mod.Script(driver, **kwargs)

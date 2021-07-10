@@ -5,22 +5,22 @@ Tests for `findpeople` script.
 # pylint: disable=too-few-public-methods
 # pylint: disable=missing-class-docstring
 # pylint: disable=missing-function-docstring
+# pylint: disable=redefined-outer-name
 
+import os
 import pytest
 
-from .login import BAD_REQUEST, Script
-from ..scraper import create_driver, create_script, Scraper
+from .login import BAD_REQUEST, SUCCESS, Script
+from ..scraper import create_script
 
 
 @pytest.fixture
-def script(driver):
-    return create_script('google/login', driver)
+def script(session_driver):
+    yield create_script('google/login', session_driver)
 
 @pytest.mark.skip(reason="must be tested manually")
 class TestScript:
     def test_execute(self, script: Script):
-        script.driver.get('http://example.com/')
-
         assert next(script.execute()) == BAD_REQUEST \
             , 'Should yield bad request with no `user_name` option'
 
@@ -31,15 +31,9 @@ class TestScript:
             , 'Should yield bad request with no `user_pass` option'
 
         result = next(script.execute(
-            user_name = 'pokemon',
-            user_pass = 'pokemon',
+            user_name=os.environ.get('SERVER_EMAIL'),
+            user_pass=os.environ.get('SERVER_SECRET'),
         ))
 
-        assert result.status == 200 \
-            , 'Should return a result with user_name and user_pass'
-
-        assert result.error is None \
-            , 'Should return a result with user_name and user_pass'
-
-        assert isinstance(result.result, dict) \
-            , 'Should return a result with user_name and user_pass'
+        assert result == SUCCESS \
+            , 'Should yield success with `user_name` and `user_pass option'

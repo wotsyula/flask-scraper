@@ -83,6 +83,7 @@ def test_load_script():
         load_script('__non_existent_module__')
 
     mod = load_script('test_script')
+
     assert hasattr(mod, 'Script') \
         , 'Should return a Script module'
 
@@ -114,13 +115,30 @@ class TestScript:
         assert curr_time - prev_time >= 1500 \
             , 'It should halt execution multiplied by multiplier'
 
-    def test_xpath(self, script):
+    def test_user_agent(self, script: Script):
+        assert isinstance(script.user_agent, str) \
+            , 'Should return a string'
+
+    def test_cookies(self, script: Script):
+        script.driver.get('https://httpbin.org/cookies/set?foo=1&bar=2')
+
+        assert script.cookies == {'foo': '1', 'bar': '2'} \
+            , 'Should return cookies'
+
+    def test_page(self, script: Script):
+        assert isinstance(script.page, int) \
+            , 'Should return a number'
+
+    def test_xpath(self, script: Script):
         pass
 
-    def test_click(self, script):
+    def test_exists(self, script: Script):
         pass
 
-    def test_send_keys(self, script):
+    def test_click(self, script: Script):
+        pass
+
+    def test_send_keys(self, script: Script):
         pass
 
     def test_move_to(self, script: Script):
@@ -168,7 +186,7 @@ class TestScript:
         assert script.is_recaptcha() \
             , 'Should return `true` if recaptcha field is present'
 
-    @pytest.mark.skip(reason="must be tested manually")
+    # @pytest.mark.xfail
     def test_audio_to_speech(self, script: Script):
         expected = 'Okay we\'re trying this for a second time to test the ' \
                  + 'ability to upload and MP 3 files hopefully this will work.'

@@ -12,6 +12,7 @@ from selenium.common.exceptions import (
     StaleElementReferenceException,
     TimeoutException
 )
+from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 
 from ..script import Script as BaseClass
@@ -26,12 +27,12 @@ class Script (BaseClass):
     See `Scraper.scrape()` function.
     """
 
-    def click_next_link(self):
+    def click_next_page_link(self):
         """
         Clicks on the next page link of google search results.
         """
+        # click on next page link
         try:
-            # click on next page link
             text = str(self.current_page + 1)
 
             self.sleep(4)
@@ -51,21 +52,21 @@ class Script (BaseClass):
 
         sleep(5)
 
-    def go_to_next(self) -> bool:
+    def go_to_next_page(self) -> bool:
         """
         Sends browser to next page.
 
         Returns:
             bool: Returns `True` if successful and `False` otherwise
         """
-        # Don't try to scan more than 99 pages
-        if self.current_page < 1 or self.current_page > 98:
+        # Don't try to scan beyound `max_page`
+        if self.current_page < 1 or self.current_page >= self.max_page:
             return False
 
+        # navigate to next page
         try:
             self.scroll_to_bottom()
-
-            self.click_next_link()
+            self.click_next_page_link()
 
             if self.is_recaptcha():
                 return self.solve_recaptcha()
@@ -77,6 +78,21 @@ class Script (BaseClass):
 
         return False
 
+    def go_to_page(self, page: int) -> bool:
+        """
+        Navigates to a specific page.
+
+        Args:
+            page (int): page to navigate to
+
+        Returns:
+            bool: `True` if successful and `False` otherwise
+        """
+        while self.current_page < page:
+            if not self.go_to_next_page():
+                return False
+
+        return True
 
     def scrape_results(self) -> Generator[dict, None, None]:
         """
@@ -86,9 +102,10 @@ class Script (BaseClass):
             Generator[dict, None, None]: search result
         """
         try:
-            user_agent = self.user_agent()
+            user_agent = self.user_agent
 
-            for link in self.driver.find_elements_by_xpath(
+            for link in self.driver.find_elements(
+                By.XPATH,
                 '//*[@id="search" or @id="rso" or @id="main"]//a[@href]',
             ):
                 href: str = link.get_attribute('href')
@@ -103,6 +120,7 @@ class Script (BaseClass):
                 yield {
                     'href': href,
                     'text': link.text,
+                    'page': self.current_page,
                     'userAgent': user_agent,
                     'referer': self.driver.current_url,
                 }
@@ -117,9 +135,6 @@ class Script (BaseClass):
         Yields:
             Generator[dict, None, None]: search result
         """
-        # set current page
-        self.current_page = 1
-
         while True:
             # get results for current page
             for result in self.scrape_results():
@@ -129,13 +144,29 @@ class Script (BaseClass):
                         break
 
             # go to next page
-            if not self.go_to_next():
+            if not self.go_to_next_page():
                 break
 
     def execute(self, **kwargs) -> Generator[dict, None, None]:
+        """
+        Executes the script using `driver`.
+
+        Args:
+            **max_page (int): last page to scrape. Default to 99
+            **page (int): Starting page to start execution. Default to 1
+            **retries (int): number of times to retry execution. Default to 2
+            **query (str): search string to find people. Default to ''
+            **kwargs (dict[str, any]): Used to pass arguments to script
+
+
+        Yields:
+            Generator[dict, None, None]: Returns a list of `dict` values
+        """
         options = {**self.options, **kwargs}
+        self.max_page = options.pop('max_page', 99)
+        page = options.pop('page', 1)
+        retries = options.pop('retries', 2)
         query = options.pop('query', '')
-        retries = options.pop('retries', 0)
 
         # exit early if no query
         if len(query) < 2:
@@ -147,11 +178,14 @@ class Script (BaseClass):
                 self.driver.get(URL)
 
             # enter query
-            new_query = query + SOCIAL_QUERY + Keys.ENTER
+            query = query + SOCIAL_QUERY + Keys.ENTER
 
-            self.send_keys('//*[@name="q"]', new_query, True)
+            self.send_keys('//*[@name="q"]', query, True)
 
             self.current_page = 1
+
+            # navigate to start page
+            self.go_to_page(page)
 
             # parse results
             yield from self.scrape()
@@ -160,9 +194,10 @@ class Script (BaseClass):
             pass
 
         except TimeoutException as err:
-            # 3rd attempt?
-            if retries > 2:
+            # no more attempts?
+            if retries < 1:
                 raise err
 
             # Try again
-            self.execute(retries=retries + 1, **kwargs)
+            self.driver.refresh()
+            self.execute(**kwargs, retries=retries - 1)
