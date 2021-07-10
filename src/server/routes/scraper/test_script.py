@@ -186,7 +186,7 @@ class TestScript:
         assert script.is_recaptcha() \
             , 'Should return `true` if recaptcha field is present'
 
-    # @pytest.mark.xfail
+    @pytest.mark.xfail
     def test_audio_to_speech(self, script: Script):
         expected = 'Okay we\'re trying this for a second time to test the ' \
                  + 'ability to upload and MP 3 files hopefully this will work.'
