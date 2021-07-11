@@ -13,6 +13,7 @@ URL = 'https://www.google.com'
 BAD_REQUEST = 400
 UNAUTHORIZED = 401
 SUCCESS = 200
+
 class Script (BaseClass):
     """
     Script that is imported by `Scraper` object.
@@ -80,7 +81,7 @@ class Script (BaseClass):
 
                 debug('Entering password')
                 self.send_keys('//input[@type="password"]', user_pass + Keys.ENTER, True)
-                self.sleep(5)
+                self.sleep(10)
 
             yield SUCCESS
 

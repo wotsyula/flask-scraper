@@ -167,11 +167,11 @@ class Script (ABC):
         Args:
             xpath (str): XPath of element to move to
         """
-        ActionChains(self.driver).move_to_element_with_offset(
-            self.driver.find_element(By.XPATH, xpath),
-            random.randint(3, 8),
-            random.randint(3, 8),
-
+        ActionChains(self.driver).move_to_element(
+            self.driver.find_element(By.XPATH, xpath)
+        ).move_by_offset(
+            random.randint(-3, 3),
+            random.randint(-3, 3),
         ).perform()
 
     def xpath(self, xpath: str) -> WebElement:

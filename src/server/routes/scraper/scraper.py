@@ -43,7 +43,7 @@ def create_driver(**kwargs) -> WebDriver:
     chrome_options = ChromeOptions()
 
     # change user agent
-    chrome_options.add_argument(f'--user-agent="{user_agent}"')
+    chrome_options.add_argument(f'--user-agent={user_agent}')
 
     # save current/load previous session
     if save_session:

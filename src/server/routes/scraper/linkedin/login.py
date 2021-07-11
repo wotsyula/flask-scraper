@@ -2,33 +2,55 @@
 """
 Script that logs into `google.com`
 """
-
-import time
+from logging import debug
 from typing import Generator
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.common.keys import Keys
 
 from ..script import Script as BaseClass
 
-URL = 'https://www.google.com'
-BAD_REQUEST = {
-    'status': 400,
-    'error': 'Bad Request',
-    'result': None,
-}
+URL = 'https://www.linkedin.com/home'
+BAD_REQUEST = 400
+UNAUTHORIZED = 401
+SUCCESS = 200
+
 class Script (BaseClass):
     """
     Script that is imported by `Scraper` object.
     See `Scraper.scrape()` function.
     """
 
+    def goto_login_page(self):
+        """
+        Navigates to login page.
+        """
+        if self.exists('//ul[contains(@class, "nav")]'):
+            debug('User already logged in')
+            return False
+
+        debug('Navigating to login page')
+
+        # click login button
+        self.click('//a[contains(@href, "linkedin.com/login")]')
+
+        # check for input field
+        if not self.exists('//input[@id="username"]'):
+            # click on use another account button
+            self.click('(//*[@tabindex="0"])[last()-1]')
+
+        return True
+
     def execute(self, **kwargs) -> Generator[dict, None, None]:
         """
         Attempts to log into website.
 
         Args:
-            **user_name (str, optional): email address of google user. Defaults to ''.
-            **user_pass (str, optional): password of google user. Defaults to ''.
+            **max_page (int): last page to scrape. Default to 99
+            **page (int): Starting page to start execution. Default to 1
+            **retries (int): number of times to retry execution. Default to 2
+            **user_name (str, optional): email address of google user. Defaults to SERVER_EMAIL.
+            **user_pass (str, optional): password of google user. Defaults to SERVER_SECRET.
+            **kwargs (dict[str, any]): Used to pass arguments to script
 
         Raises:
             TimeoutException: if required elements are not found on page
@@ -37,45 +59,40 @@ class Script (BaseClass):
             Generator[dict, None, None]: [description]
         """
         options = {**self.options, **kwargs}
+        self.max_page = options.pop('max_page', 99)
+        # page = options.pop('page', 1)
+        retries = options.pop('retries', 2)
         user_name = options.pop('user_name', '')
         user_pass = options.pop('user_pass', '')
-        retries = options.pop('retries', 0)
+        retries = options.pop('retries', 2)
 
         # exit early if no user name / pass
         if len(user_name) < 2 or len(user_pass) < 2:
             yield BAD_REQUEST
+            return
 
         try:
-            # go to google.com website
-            if 'google.com' not in str(self.driver.current_url):
-                self.driver.get(URL)
+            self.driver.get(URL)
 
-            # click on login button
-            self.click('//a[contains(@href, "google.com/ServiceLogin")]')
+            if self.goto_login_page():
+                debug('Entering email address')
+                self.send_keys('//input[@id="username"]', user_name + Keys.TAB, True)
+                self.sleep(5)
 
-            # enter email address
-            self.send_keys('//input[@type="email"]', user_name + Keys.ENTER, True)
+                debug('Entering password')
+                self.send_keys('//input[@id="password"]', user_pass + Keys.ENTER, True)
+                self.sleep(10)
 
-            # enter password
-            self.send_keys('//input[@type="password"]', user_pass + Keys.ENTER, True)
-
-            # empty result
-            yield {
-                'status': 200,
-                'error': None,
-                'result': {
-                    'time': round(time.time() * 1000),
-                }
-            }
+            yield SUCCESS
 
         except NoSuchElementException:
-            pass
+            # failure
+            yield UNAUTHORIZED
 
         except TimeoutException as err:
-            # 3rd attempt?
-            if retries > 2:
+            # no more attempts?
+            if retries < 1:
                 raise err
 
-            # try again
-            retries += 1
-            self.execute(retries=retries, **kwargs)
+            # Try again
+            self.execute(**kwargs, retries=retries - 1)
