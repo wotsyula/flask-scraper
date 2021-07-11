@@ -60,11 +60,17 @@ class TestScraper:
             , 'Should delete a script'
 
     def test_scrape(self, scraper: Scraper):
-        assert scraper.scrape('test_script') == 'running' \
+        assert scraper.scrape('test_script') == 'done' \
             , 'Should return a string'
 
         assert scraper.is_script('test_script') \
             , 'Should add a new script'
+
+    def test_get_results(self, scraper: Scraper):
+        scraper.scrape('test_script')
+
+        assert scraper.get_results('test_script') == [MOCK_RESULT] \
+            , 'Should return results from script'
 
 def test_create_scraper():
     assert isinstance(create_scraper(), Scraper) \

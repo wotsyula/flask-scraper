@@ -166,8 +166,8 @@ class TestScript:
             , 'Should have more than 4 results'
 
         search_texts = [
-            'https://twitter.com/beyonce',
-            'https://www.facebook.com/beyonce',
+            'twitter.com/beyonce',
+            'facebook.com/beyonce',
         ]
 
         for search_text in search_texts:

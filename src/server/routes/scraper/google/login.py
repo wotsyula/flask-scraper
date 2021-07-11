@@ -2,7 +2,7 @@
 """
 Script that logs into `google.com`
 """
-
+from logging import debug
 from typing import Generator
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.common.keys import Keys
@@ -24,7 +24,10 @@ class Script (BaseClass):
         Navigates to login page.
         """
         if self.exists('//*[contains(@href, "google.com/Logout")]'):
+            debug('User already logged in')
             return False
+
+        debug('going to login page')
 
         # click login button
         self.click('//a[contains(@href, "google.com/ServiceLogin")]')
@@ -71,11 +74,11 @@ class Script (BaseClass):
             self.driver.get(URL)
 
             if self.goto_login_page():
-                # enter email address
+                debug('Entering email address')
                 self.send_keys('//input[@type="email"]', user_name + Keys.ENTER, True)
                 self.sleep(5)
 
-                # enter password
+                debug('Entering password')
                 self.send_keys('//input[@type="password"]', user_pass + Keys.ENTER, True)
                 self.sleep(5)
 

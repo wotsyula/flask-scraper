@@ -5,6 +5,7 @@ Script that finds people on `google.com`
 Searches for linkedin accounts, twitter accounts, facebook accounts.
 """
 
+from logging import debug
 from time import sleep
 from typing import Generator
 from selenium.common.exceptions import (
@@ -65,6 +66,7 @@ class Script (BaseClass):
 
         # navigate to next page
         try:
+            debug('Going to next page')
             self.scroll_to_bottom()
             self.click_next_page_link()
 
@@ -88,6 +90,8 @@ class Script (BaseClass):
         Returns:
             bool: `True` if successful and `False` otherwise
         """
+        debug('Going to page: ' + str(page))
+
         while self.current_page < page:
             if not self.go_to_next_page():
                 return False
@@ -102,6 +106,8 @@ class Script (BaseClass):
             Generator[dict, None, None]: search result
         """
         try:
+            debug('Scraping results on page: ' + str(self.current_page))
+
             user_agent = self.user_agent
 
             for link in self.driver.find_elements(
@@ -177,7 +183,8 @@ class Script (BaseClass):
             if 'google.com/search' not in self.driver.current_url:
                 self.driver.get(URL)
 
-            # enter query
+            debug('Entering query: ' + query)
+
             query = query + SOCIAL_QUERY + Keys.ENTER
 
             self.send_keys('//*[@name="q"]', query, True)

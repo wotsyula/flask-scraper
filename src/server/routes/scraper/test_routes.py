@@ -39,7 +39,7 @@ def test_get_site_script(client: FlaskClient):
     assert response.status_code == 200 \
         , 'Should return status code 200'
 
-    assert response.json == {'status':0, 'error':None, 'result':'running'} \
+    assert response.json == {'status':0, 'error':None, 'result':'done'} \
         , 'Should return a success response'
 
 def test_get_site_script_status(client: FlaskClient):
@@ -75,18 +75,8 @@ def test_get_site_script_results(client: FlaskClient):
     assert response.status_code == 200 \
         , 'Should return status code 200'
 
-    assert response.json['status'] == 0 \
-        , 'Should return status of 0'
-
-    assert response.json['error'] is None \
-        , 'Should return no error'
-
-    assert isinstance(response.json['result'], list) \
-        , 'Should return a list result'
-
-    if len(response.json['result']) > 1:
-        assert response.json['result'][0] == MOCK_RESULT \
-            , 'Should return results stored by scrapper'
+    assert response.json == {'status': 0, 'error': None, 'result': [MOCK_RESULT]} \
+        , 'Should return test result'
 
     response = client.get(url_for('scraper.get_site_script_results', script='test_script'))
 

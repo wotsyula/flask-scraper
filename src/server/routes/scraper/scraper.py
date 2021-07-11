@@ -3,8 +3,8 @@
 Defines functions and classes for managing `Scraper` object.
 """
 from concurrent.futures import ThreadPoolExecutor, Future
+from logging import debug
 import os
-import random
 import time
 from typing import Generator
 from selenium.common.exceptions import WebDriverException
@@ -101,16 +101,27 @@ class Scraper:
             and 'future' in self.scripts[path]
 
     @staticmethod
-    def run_script(generator: Generator[dict, None, None], results: list):
+    def run_script(generator: Generator[dict, None, None], results: list, driver: WebDriver):
         """
         Function passed to `ThreadExecutor.submit()`
 
         Args:
             generator (Generator[dict, None, None]): result of `Script.execute()`
             results (list): list to store results
+            driver (WebDriver): selenium webdriver instance
         """
-        for result in generator:
-            results.push(result)
+        try:
+            # read
+            for result in generator:
+                results.append(result)
+
+            # stop webdriver session
+            if isinstance(driver, WebDriver):
+                if driver.session_id:
+                    driver.quit()
+
+        except WebDriverException:
+            pass
 
     def add_script(
         self,
@@ -123,13 +134,18 @@ class Scraper:
         Adds a new script to scrapper.
 
         Args:
-            path (str): script to add
+            path (str): path to script in `/scrapper` directory
         """
         if not isinstance(path, str):
             raise TypeError('`path` must be a string')
 
+        debug('Adding script ' + path)
+
         results = []
-        future = self.executor.submit(self.run_script, generator, results)
+        future = self.executor.submit(self.run_script, generator, results, driver)
+
+        # prevent race conditions
+        time.sleep(4)
 
         self.scripts[path] = {
             'driver': driver,
@@ -139,12 +155,14 @@ class Scraper:
             'future': future,
         }
 
+        debug('Running script ' + path)
+
     def get_script(self, path: str) -> Script:
         """
         Returns the `Script` instance created for the path.
 
         Args:
-            path (str): script to retreave instance of
+            path (str): path to script in `/scrapper` directory
 
         Returns:
             Script: `Script` instance created for path
@@ -159,23 +177,28 @@ class Scraper:
         Deletes a script added with `add_script()`
 
         Args:
-            path (str): script to delete
+            path (str): path to script in `/scrapper` directory
         """
         if not self.is_script(path):
             return
 
-        # stop webdriver session
-        try:
-            if isinstance(self.scripts[path]['driver'], WebDriver):
-                self.scripts[path]['driver'].close()
-                self.scripts[path]['driver'].quit()
-
-        except WebDriverException:
-            pass
+        debug('Deleting script ' + path)
 
         # send stopsignal to script
         if isinstance(self.scripts[path]['generator'], Generator):
             self.scripts[path]['generator'].close()
+
+        # stop webdriver session
+        try:
+            if isinstance(self.scripts[path]['driver'], WebDriver):
+                if self.scripts[path]['driver'].session_id:
+                    self.scripts[path]['driver'].quit()
+
+                    # prevent race conditions
+                    time.sleep(2)
+
+        except WebDriverException:
+            pass
 
         # cancel future
         if isinstance(self.scripts[path]['future'], Future):
@@ -193,7 +216,7 @@ class Scraper:
             **kwargs (any): arguments forwarded to `Script.execute()`
 
         Returns:
-            Generator[dict, None, None]: See `script.py:Script:execute`
+            str: See `get_status()`
         """
         # delete previous script
         if self.is_script(path):
@@ -206,17 +229,14 @@ class Scraper:
 
         self.add_script(path, driver, script, generator)
 
-        # prevent race conditions
-        time.sleep(2)
-
-        return 'running'
+        return self.get_status(path)
 
     def get_status(self, path: str) -> str:
         """
         Returns the current status of script.
 
         Args:
-            path (str): script to get status of
+            path (str): path to script in `/scrapper` directory
 
         Returns:
             str: `done` script has completed.
@@ -234,21 +254,6 @@ class Scraper:
             return 'done'
 
         return 'running'
-
-    def get_result(self, path: str) -> any:
-        """
-        Returns the result of a future used to run a script.
-
-        Args:
-            path (str): script to get result of
-
-        Returns:
-            any: `ThreadPoolExecutor.result()` or `None` if still executing
-        """
-        if self.get_status(path) == 'done':
-            return self.scripts[path]['future'].result()
-
-        return None
 
     def get_results(self, path: str) -> list:
         """
@@ -274,7 +279,9 @@ class Scraper:
                 # transfer to results
                 result = self.scripts[path]['results'].pop()
 
-                results.append(result) 
+                results.append(result)
+
+        debug('Fetched results: ' + str(len(results)))
 
         return results
 

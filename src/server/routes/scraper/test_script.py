@@ -37,10 +37,10 @@ VALID_PATHS = [
     'facebook/page',
 ]
 
-MOCK_RESULT = [{
+MOCK_RESULT = {
     'foo': 1,
     'bar': 'foo',
-}]
+}
 
 class Script (BaseScript):
     def execute(self, **kwargs) -> Generator[dict, None, None]:
