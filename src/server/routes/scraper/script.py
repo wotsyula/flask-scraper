@@ -484,14 +484,14 @@ def create_script(path: str, driver: WebDriver, **kwargs) -> Script:
         driver (WebDriver): Selenium `Webdriver` instance
 
     Raises:
-        Exception: [description]
+        KeyError: if `path` does not point to a valid script module
 
     Returns:
-        Script: [description]
+        Script: instance of `Script`
     """
     mod = load_script(path)
 
     if not hasattr(mod, 'Script') or not isinstance(mod.Script, type):
-        raise Exception(f'invalid module ({path})')
+        raise KeyError(f'invalid module ({path})')
 
     return mod.Script(driver, **kwargs)

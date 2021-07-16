@@ -18,7 +18,7 @@ from ..scraper import create_script
 def script(session_driver):
     yield create_script('linkedin/login', session_driver)
 
-# @pytest.mark.skip(reason="must be tested manually")
+@pytest.mark.skip(reason="must be tested manually")
 class TestScript:
     def test_execute(self, script: Script):
         assert next(script.execute()) == BAD_REQUEST \

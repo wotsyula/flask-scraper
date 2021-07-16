@@ -235,7 +235,7 @@ class TestScript:
 
 def test_create_script(driver):
     # Should throw an error if module does not have 'Script' property
-    with pytest.raises(Exception):
+    with pytest.raises(KeyError):
         create_script('test_scraper', driver)
 
     assert isinstance(create_script('test_script', driver), BaseScript) \
