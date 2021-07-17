@@ -3,9 +3,9 @@
 Defines root blueprint for all flask routes
 """
 import logging
-
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, json
 from werkzeug.exceptions import HTTPException
+
 from .scraper.routes import scraper
 
 index = Blueprint('index', __name__, url_prefix='/')
@@ -25,8 +25,8 @@ def get_status():
         "result": True,
     })
 
-@index.errorhandler(HTTPException)
-def handle_exception(err):
+@index.app_errorhandler(HTTPException)
+def handle_exception(err: HTTPException):
     """
     Return JSON instead of HTML for HTTP errors.
     """
@@ -36,7 +36,7 @@ def handle_exception(err):
     response = err.get_response()
     # replace the body with JSON
     response.content_type = 'application/json'
-    response.data = jsonify({
+    response.data = json.dumps({
         'status': err.code,
         'error': err.name,
         'result': None
