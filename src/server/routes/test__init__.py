@@ -6,6 +6,7 @@ Tests for `blueprint` module.
 # pylint: disable=missing-class-docstring
 # pylint: disable=missing-function-docstring
 
+import json
 import pytest
 from flask import url_for
 from flask.testing import FlaskClient
@@ -22,5 +23,14 @@ def test_get_status(client: FlaskClient):
     assert response.status_code == 200 \
         , 'Should return status code 200'
 
-    assert response.json == {'error': None, 'result': True, 'status': 0} \
+    assert response.json == {'status': 0, 'error': None, 'result': True} \
         , 'Should return an empty response'
+
+def test_handle_exception(client: FlaskClient):
+    response = client.get('/non-existent-endpoint')
+
+    assert response.content_type == 'application/json' \
+        , 'Should return a json response'
+
+    assert json.loads(response.data) == {"status": 404, "error": "Not Found", "result": None} \
+        , 'Should return a json response'

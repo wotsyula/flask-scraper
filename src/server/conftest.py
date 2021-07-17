@@ -57,7 +57,7 @@ def driver() -> Generator[WebDriver, None, None]:
     except WebDriverException:
         pass
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope='class')
 def session_driver() -> Generator[WebDriver, None, None]:
     """
     Returns an instance of selenium `WebDriver`.

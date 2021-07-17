@@ -66,6 +66,9 @@ def create_driver(**kwargs) -> WebDriver:
         'webkit.webprefs.encrypted_media_enabled': False,   # disable protected content
     })
 
+    # enable performance logging
+    chrome_options.set_capability('goog:loggingPrefs', {'performance': 'ALL'})
+
     driver = WebDriver(options=chrome_options, **options)
 
     # set timeout for driver operations
