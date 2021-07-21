@@ -24,7 +24,11 @@ from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import wait, expected_conditions as EC
 
-SCRIPT_DIR = os.path.abspath(os.path.dirname(__file__))
+SCRIPT_DIR = os.path.abspath(os.path.join(
+    os.path.dirname(__file__),
+    'scripts',
+))
+
 SCRIPTS = []
 
 for directory in os.listdir(SCRIPT_DIR):
@@ -71,7 +75,7 @@ def sanitize_script(path: str) -> str:
     if not isinstance(module, re.Match):
         raise TypeError(f'invalid path {path})')
 
-    module = '..' + module.group().rstrip('/').replace('/', '.')
+    module = '..scripts.' + module.group().rstrip('/').replace('/', '.')
 
     return module
 
@@ -170,13 +174,13 @@ class Script (ABC):
         ActionChains(self.driver).move_to_element(
             self.driver.find_element(By.XPATH, xpath)
         ).move_by_offset(
-            random.randint(-3, 3),
-            random.randint(-3, 3),
+            random.randint(-4, 4),
+            random.randint(-4, 4),
         ).perform()
 
     def xpath(self, xpath: str) -> WebElement:
         """
-        Returns element found at XPath
+        Returns element found at XPath.
 
         Args:
             xpath (str): XPath of element to find
@@ -187,7 +191,15 @@ class Script (ABC):
         return wait.WebDriverWait(self.driver, 30).until(element_exists)
 
     def exists(self, xpath: str) -> bool:
+        """
+        Determines whether an element exists on a page.
 
+        Args:
+            xpath (str): XPath of element to find
+
+        Returns:
+            bool: `True` if found and `False` otherwise
+        """
         try:
             element_exists = EC.presence_of_element_located((By.XPATH, xpath))
 
@@ -238,7 +250,6 @@ class Script (ABC):
             driver_wait.until(element_exists).send_keys(char)
             time.sleep(random.randint(100,400) / 1000)
 
-
     def scroll_to_bottom(self):
         """
         Scrolls to the bottom of the current page.
@@ -250,7 +261,7 @@ class Script (ABC):
         while(
             count < 10
             and self.driver.execute_script(
-                'return document.body.scrollHeight - window.scrollY',
+                'return document.body.scrollHeight - window.scrollY;',
             ) > 1100
         ):
             # move mouse
@@ -277,7 +288,8 @@ class Script (ABC):
         self.driver.execute_script(
             'window.scrollTo({left: 0, top: document.body.scrollHeight, behaviour: "smooth"});'
         )
-        self.sleep(1)
+
+        self.sleep(2)
 
     def download(self, url: str) -> str:
         """
@@ -300,14 +312,15 @@ class Script (ABC):
             stream = True,
         )
 
-        filename = os.path.abspath(os.path.basename(urlparse(url).path))
+        filename = os.path.abspath(os.path.basename(
+            urlparse(url).path,
+        ))
 
         with open(filename, "wb") as handle:
             for data in response.iter_content():
                 handle.write(data)
 
         return filename
-
 
     def is_recaptcha(self):
         """
@@ -317,22 +330,7 @@ class Script (ABC):
         Returns:
             bool: `True` if found and `False` otherwise
         """
-
-        try:
-            element_exists = EC.presence_of_element_located((
-                By.XPATH,
-                '//iframe[contains(@src, "google.com/recaptcha")]',
-            ))
-
-            wait.WebDriverWait(self.driver, 1).until(element_exists)
-
-            return True
-
-        except (NoSuchElementException, TimeoutException):
-            pass
-
-        return False
-
+        return self.exists('//iframe[contains(@src, "google.com/recaptcha")]')
 
     def audio_to_text(self, path: str) -> str:
         """
@@ -346,6 +344,7 @@ class Script (ABC):
         """
         # open new window
         self.driver.execute_script('window.open("","_blank");')
+        self.sleep(2)
         self.driver.switch_to.window(self.driver.window_handles[-1])
 
         # navigate to watson
@@ -406,7 +405,7 @@ class Script (ABC):
             self.sleep(10)
 
             # listen to audio
-            for unused in range(random.randint(2,6)):
+            for _ in range(random.randint(2,6)):
                 ActionChains(self.driver).send_keys(Keys.SPACE).perform()
                 time.sleep(random.randint(8000, 14000) / 1000)
 

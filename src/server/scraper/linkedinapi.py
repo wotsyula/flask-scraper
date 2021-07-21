@@ -6,15 +6,13 @@ import json
 import logging
 import random
 import time
-from typing import Dict, List
+from typing import Dict
 
 import requests
 from requests.models import Response
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver import Remote as WebDriver
 from selenium.webdriver.common.by import By
-
-from .responses import PROFILE_TYPE, POSITION_TYPE, Profile, LinkedInProfile, LinkedinPosition
 
 URL = 'https://www.linkedin.com/home'
 API_BASE = 'https://www.linkedin.com/voyager/api/'
@@ -152,52 +150,24 @@ class LinkedInAPI():
         """
         url = API_BASE + self.sanitize_path(path)
 
-        self.logger.debug('Making API call to: ' + url)
+        self.logger.debug('Making API call to: %s', url)
         time.sleep(random.randint(10, 30) / 10)
 
-        if 'data' in kwargs:
-            response = self.session.post(url, **kwargs)
-        else:
-            response = self.session.get(url, **kwargs)
+        # if 'data' in kwargs:
+        #     response = self.session.post(url, **kwargs)
+        # else:
+        response = self.session.get(url, **kwargs)
 
         if response.status_code != 200:
             self.logger.debug(
-                'Invalid response: ' + response.status_code,
+                'Invalid response: %s',
+                response.status_code,
                 extra=response.json(),
             )
 
         return response
 
-    @staticmethod
-    def get_profile_pictures(profile: LinkedInProfile) -> List[str]:
-        """
-        Extracts profile pictures from a LinkedIn profile.
-
-        Args:
-            profile (LinkedInProfile): profile to extract picture from
-
-        Returns:
-            [type]: [description]
-        """
-        result = []
-
-        # exit early if no profile picture
-        if \
-            'profilePicture' not in profile \
-            or 'displayImageReference' not in profile['profilePicture'] \
-            or 'vectorImage' not in profile['profilePicture']['displayImageReference'] \
-        :
-            return result
-
-        # parse artifacts
-        picture = profile['profilePicture']['displayImageReference']['vectorImage']
-
-        for artifact in picture['artifacts']:
-            result.append(picture['rootUrl'] + artifact['fileIdentifyingUrlPathSegment'])
-
-        return result
-
-    def get_profile(self, profile_id: str) -> Profile:
+    def get_profile(self, profile_id: str) -> Dict[str, any]:
         """
         Queries LinkedIn API for a profile
 

@@ -4,8 +4,8 @@ Defines routes for `/scraper` subdirectory
 """
 from flask import Blueprint, jsonify, abort, request
 
-from .scraper import create_scraper
-from .script import SCRIPTS, validate_script
+from ..scraper.scraper import create_scraper
+from ..scraper.script import SCRIPTS, validate_script
 
 scraper = Blueprint('scraper', __name__, url_prefix='/scraper')
 instance = create_scraper(save_session=True)
@@ -20,27 +20,21 @@ def get_status():
         'error': None,
         'result': {
             'scrips': SCRIPTS,
-        }
+        },
     })
 
 
-@scraper.route('/<script>', methods=['GET'], defaults={'site': ''})
-@scraper.route('/<site>/<script>', methods=['GET'])
-def get_site_script(site, script):
+@scraper.route('/<script>', methods=['GET'])
+def get_script(script):
     """
     Starts scripts.
 
     Args:
-        site (str): module for script. ie `google`
-        script (str): script to execute. ie 'login.py`
+        script (str): script to execute. ie 'login`
 
     Returns:
         str: JSON data
     """
-    # calculate script
-    if len(site) > 1:
-        script = f'{site}/{script}'
-
     # validate script
     if not validate_script(script):
         return abort(404)
@@ -55,9 +49,8 @@ def get_site_script(site, script):
         'result': result,
     })
 
-@scraper.route('/<script>/status', methods=['GET'], defaults={'site': ''})
-@scraper.route('/<site>/<script>/status')
-def get_site_script_status(site, script):
+@scraper.route('/<script>/status', methods=['GET'])
+def get_script_status(script):
     """
     Retrieves script results.
 
@@ -68,11 +61,7 @@ def get_site_script_status(site, script):
     Returns:
         str: JSON data
     """
-    # calculate script
-    if len(site) > 1:
-        script = f'{site}/{script}'
-
-    # check if scrape exists
+    # validate script
     if not instance.is_script(script):
         return abort(404)
 
@@ -84,9 +73,8 @@ def get_site_script_status(site, script):
         'result': result,
    })
 
-@scraper.route('/<script>/results', methods=['GET'], defaults={'site': ''})
-@scraper.route('/<site>/<script>/results')
-def get_site_script_results(site, script):
+@scraper.route('/<script>/results', methods=['GET'])
+def get_script_results(script):
     """
     Retrieves script results.
 
@@ -97,15 +85,10 @@ def get_site_script_results(site, script):
     Returns:
         str: JSON data
     """
-    # calculate script
-    if len(site) > 1:
-        script = f'{site}/{script}'
-
-    # check if scrape exists
+    # validate script
     if not instance.is_script(script):
         return abort(404)
 
-    # get results
     results = instance.get_results(script)
 
     return jsonify({
@@ -114,9 +97,8 @@ def get_site_script_results(site, script):
         'result': results,
     })
 
-@scraper.route('/<script>/cancel', methods=['GET'], defaults={'site': ''})
-@scraper.route('/<site>/<script>/cancel')
-def get_site_script_cancel(site, script):
+@scraper.route('/<script>/cancel', methods=['GET'])
+def cancel_script(script):
     """
     Retrieves script results.
 
@@ -127,11 +109,7 @@ def get_site_script_cancel(site, script):
     Returns:
         str: JSON data
     """
-    # calculate script
-    if len(site) > 1:
-        script = f'{site}/{script}'
-
-    # check if scrape exists
+    # validate script
     if not instance.is_script(script):
         return abort(404)
 

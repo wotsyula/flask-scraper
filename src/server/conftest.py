@@ -13,7 +13,7 @@ from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.remote.webdriver import WebDriver
 
 from .config import DefaultConfig
-from .routes.scraper.scraper import CHROME_USER_AGENT, Scraper, create_driver
+from .scraper.scraper import CHROME_USER_AGENT, Scraper, create_driver
 
 @pytest.fixture(scope='session')
 def create_app():

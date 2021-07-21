@@ -11,8 +11,8 @@ import pytest
 from flask import url_for
 from flask.testing import FlaskClient
 
-from .routes import scraper
-from .test_script import MOCK_RESULT
+from .scraper import scraper
+from ..scraper.scripts.mock import MOCK_RESULT
 
 @pytest.fixture
 def app(create_app):
@@ -33,8 +33,8 @@ def test_get_status(client: FlaskClient):
     assert isinstance(response.json['result'], dict) \
         , 'Should return a dict result'
 
-def test_get_site_script(client: FlaskClient):
-    response = client.get(url_for('scraper.get_site_script', script='test_script'))
+def test_get_script(client: FlaskClient):
+    response = client.get(url_for('scraper.get_script', script='mock'))
 
     assert response.status_code == 200 \
         , 'Should return status code 200'
@@ -42,9 +42,9 @@ def test_get_site_script(client: FlaskClient):
     assert response.json == {'status':0, 'error':None, 'result':'done'} \
         , 'Should return a success response'
 
-def test_get_site_script_status(client: FlaskClient):
-    client.get(url_for('scraper.get_site_script', script='test_script'))
-    response = client.get(url_for('scraper.get_site_script_status', script='test_script'))
+def test_get_script_status(client: FlaskClient):
+    client.get(url_for('scraper.get_script', script='mock'))
+    response = client.get(url_for('scraper.get_script_status', script='mock'))
 
     assert response.status_code == 200 \
         , 'Should return status code 200'
@@ -52,9 +52,9 @@ def test_get_site_script_status(client: FlaskClient):
     assert response.json == {'status':0, 'error':None, 'result':'done'} \
         , 'Should return a done state'
 
-def test_get_site_script_cancel(client: FlaskClient):
-    client.get(url_for('scraper.get_site_script', script='test_script'))
-    response = client.get(url_for('scraper.get_site_script_cancel', script='test_script'))
+def test_cancel_script(client: FlaskClient):
+    client.get(url_for('scraper.get_script', script='mock'))
+    response = client.get(url_for('scraper.cancel_script', script='mock'))
 
     assert response.status_code == 200 \
         , 'Should return status code 200'
@@ -68,9 +68,9 @@ def test_get_site_script_cancel(client: FlaskClient):
     assert isinstance(response.json['result'], bool) \
         , 'Should return a boolean result'
 
-def test_get_site_script_results(client: FlaskClient):
-    client.get(url_for('scraper.get_site_script', script='test_script'))
-    response = client.get(url_for('scraper.get_site_script_results', script='test_script'))
+def test_get_script_results(client: FlaskClient):
+    client.get(url_for('scraper.get_script', script='mock'))
+    response = client.get(url_for('scraper.get_script_results', script='mock'))
 
     assert response.status_code == 200 \
         , 'Should return status code 200'
@@ -78,7 +78,7 @@ def test_get_site_script_results(client: FlaskClient):
     assert response.json == {'status': 0, 'error': None, 'result': [MOCK_RESULT]} \
         , 'Should return test result'
 
-    response = client.get(url_for('scraper.get_site_script_results', script='test_script'))
+    response = client.get(url_for('scraper.get_script_results', script='mock'))
 
     assert response.json['result'] == [] \
         , 'Should consume results stored by scrapper'

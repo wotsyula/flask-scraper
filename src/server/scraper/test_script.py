@@ -9,7 +9,6 @@ Tests for `script` module.
 
 import os
 import time
-from typing import Generator
 
 import pytest
 from selenium.webdriver.common.action_chains import ActionChains
@@ -18,9 +17,10 @@ from .script import (
     validate_script,
     sanitize_script,
     load_script,
-    Script as BaseScript,
     create_script
 )
+
+from .scripts.mock import Script
 
 INVALID_PATHS = [
     None,
@@ -37,15 +37,6 @@ VALID_PATHS = [
     'facebook/page',
 ]
 
-MOCK_RESULT = {
-    'foo': 1,
-    'bar': 'foo',
-}
-
-class Script (BaseScript):
-    def execute(self, **kwargs) -> Generator[dict, None, None]:
-        yield MOCK_RESULT
-
 def test_validate_script():
 
     for path in INVALID_PATHS:
@@ -56,18 +47,17 @@ def test_validate_script():
         assert validate_script(path) is True \
             , 'Return true for if path is valid'
 
-
 def test_sanitize_script():
     for path in INVALID_PATHS:
         # Should raise an error if path is not a string
         with pytest.raises(TypeError):
-            sanitize_script("abc.def")
+            sanitize_script(path)
 
     # Should raise an error if path contains full stop (.)
     with pytest.raises(TypeError):
         sanitize_script("abc.def")
 
-    for number in range(0-9):
+    for number in range(0,10):
         # Should raise an error if path contains a number (0-9)
         with pytest.raises(TypeError):
             sanitize_script(f'abc{number}def')
@@ -76,17 +66,15 @@ def test_sanitize_script():
         assert isinstance(sanitize_script(path), str) \
             , 'Should return string'
 
-
 def test_load_script():
     # Should raise an error for non existent modules
     with pytest.raises(Exception):
         load_script('__non_existent_module__')
 
-    mod = load_script('test_script')
+    mod = load_script('mock')
 
     assert hasattr(mod, 'Script') \
         , 'Should return a Script module'
-
 
 class TestScript:
     @pytest.fixture
@@ -236,7 +224,7 @@ class TestScript:
 def test_create_script(driver):
     # Should throw an error if module does not have 'Script' property
     with pytest.raises(KeyError):
-        create_script('test_scraper', driver)
+        create_script('mockerror', driver)
 
-    assert isinstance(create_script('test_script', driver), BaseScript) \
+    assert isinstance(create_script('mock', driver), Script) \
         , 'Should create a `Script` object'

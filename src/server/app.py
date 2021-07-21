@@ -6,10 +6,11 @@ Fask application
 from flask import Flask, request, current_app
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from werkzeug.exceptions import HTTPException
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from .config import DefaultConfig, STATIC_DIR
-from .routes import index
+from .routes.index import index
 
 def create_app(name):
     """Factory for Flask libraries `Flask`.
@@ -43,12 +44,19 @@ app.register_blueprint(index, url_prefix='/api/v1')
 @app.route('/', methods=['GET'])
 def get_index():
     """
-    Home page
-
-    Returns:
-        str: HTML
+    Home page.
     """
     return current_app.send_static_file('index.htm')
+
+@app.errorhandler(HTTPException)
+def handle_exception(err: HTTPException):
+    """
+    Use browser error pages.
+    """
+    # empty respnse
+    response = err.get_response()
+
+    return '', response.status_code
 
 @app.before_request
 def handle_wsgi_input_terminated():
@@ -81,7 +89,7 @@ def set_headers(response):
         ] = 'GET, POST, PUT, DELETE, PATCH, OPTIONS'
         response.headers['Access-Control-Max-Age'] = '3600'  # 1 hour cache
 
-        if request.headers.get('Access-Control-Request-Headers') is not None:
+        if request.headers.get('Access-Control-Request-Headers'):
             response.headers['Access-Control-Allow-Headers'] = request.headers[
                 'Access-Control-Request-Headers'
             ]

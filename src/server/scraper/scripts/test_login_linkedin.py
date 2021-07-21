@@ -10,13 +10,13 @@ Tests for `findpeople` script.
 import os
 import pytest
 
-from .login import BAD_REQUEST, SUCCESS, Script
+from .login_linkedin import BAD_REQUEST, SUCCESS, Script
 from ..scraper import create_script
 
 
 @pytest.fixture
 def script(session_driver):
-    yield create_script('linkedin/login', session_driver)
+    yield create_script('login_linkedin', session_driver)
 
 @pytest.mark.skip(reason="must be tested manually")
 class TestScript:

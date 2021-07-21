@@ -10,7 +10,7 @@ Tests for `script` module.
 import time
 import pytest
 
-from .api import (
+from .linkedinapi import (
     LinkedInAPI,
     create_linkedinapi,
 )
@@ -56,14 +56,14 @@ class TestLinkedInAPI:
         assert result.status_code == 200 \
             , 'Should return a result'
 
-        assert 'include' in result.json() \
+        assert 'included' in result.json() \
             , 'Should return a result'
 
     def test_get_profile(self, linkedinapi: LinkedInAPI):
         result = linkedinapi.get_profile('jcrossman')
 
-        assert 'included' in result \
-            , 'Should return LinkedIn API response'
+        assert isinstance(result, dict) \
+            , 'Should return a JSON response'
 
     def test__init__(self, driver, session_driver):
         # Should throw an error if driver is not an instance of `WebDriver`
@@ -78,6 +78,6 @@ class TestLinkedInAPI:
             , 'Should not throw an error'
 
 
-def test_create_script(session_driver):
+def test_create_linkedinapi(session_driver):
     assert isinstance(create_linkedinapi(session_driver), LinkedInAPI) \
         , 'Should create a `LinkedInAPI` instance'

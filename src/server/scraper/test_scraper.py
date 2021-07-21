@@ -10,7 +10,9 @@ import pytest
 from selenium.webdriver.remote.webdriver import WebDriver
 
 from .scraper import Scraper, create_driver, create_scraper
-from .test_script import MOCK_RESULT, Script as TestScript, create_script
+from .script import create_script
+
+from .scripts.mock import MOCK_RESULT, Script as MockScript
 
 def test_create_driver():
     driver = create_driver(**Scraper.DEFAULT_OPTIONS)
@@ -28,48 +30,48 @@ class TestScraper:
         return Scraper()
 
     def test_is_script(self, scraper: Scraper):
-        assert not scraper.is_script('test_script') \
+        assert not scraper.is_script('mock') \
             , 'Should return false'
 
     def test_run_script(self, scraper: Scraper):
         pass
 
     def test_add_script(self, scraper: Scraper):
-        scraper.add_script('test_script', None, None, [])
+        scraper.add_script('mock', None, None, [])
 
-        assert scraper.is_script('test_script') \
+        assert scraper.is_script('mock') \
             , 'Should add a new script'
 
     def test_get_script(self, scraper: Scraper):
-        assert scraper.get_script('test_script') is None \
+        assert scraper.get_script('mock') is None \
             , 'Should return None for non existant scripts'
 
-        scraper.scrape('test_script')
+        scraper.scrape('mock')
 
-        assert isinstance(scraper.get_script('test_script'), TestScript) \
+        assert isinstance(scraper.get_script('mock'), MockScript) \
             , 'Should return an instance of `Script`'
 
     def test_delete_script(self, scraper: Scraper, driver: WebDriver):
-        script = create_script('test_script', driver)
+        script = create_script('mock', driver)
         generator = script.execute()
 
-        scraper.add_script('test_script', driver, script, generator)
-        scraper.delete_script('test_script')
+        scraper.add_script('mock', driver, script, generator)
+        scraper.delete_script('mock')
 
-        assert not scraper.is_script('test_script') \
+        assert not scraper.is_script('mock') \
             , 'Should delete a script'
 
     def test_scrape(self, scraper: Scraper):
-        assert scraper.scrape('test_script') == 'done' \
+        assert scraper.scrape('mock') == 'done' \
             , 'Should return a string'
 
-        assert scraper.is_script('test_script') \
+        assert scraper.is_script('mock') \
             , 'Should add a new script'
 
     def test_get_results(self, scraper: Scraper):
-        scraper.scrape('test_script')
+        scraper.scrape('mock')
 
-        assert scraper.get_results('test_script') == [MOCK_RESULT] \
+        assert scraper.get_results('mock') == [MOCK_RESULT] \
             , 'Should return results from script'
 
 def test_create_scraper():

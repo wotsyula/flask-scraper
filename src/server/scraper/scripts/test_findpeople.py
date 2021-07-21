@@ -16,7 +16,7 @@ from ..scraper import create_script
 
 @pytest.fixture
 def script(driver):
-    return create_script('google/findpeople', driver)
+    return create_script('findpeople', driver)
 
 class TestScript:
     def click_next_page_link(self, script: Script):

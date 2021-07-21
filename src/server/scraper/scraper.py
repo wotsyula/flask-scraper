@@ -3,7 +3,7 @@
 Defines functions and classes for managing `Scraper` object.
 """
 from concurrent.futures import ThreadPoolExecutor, Future
-from logging import debug
+import logging
 import os
 import time
 from typing import Generator
@@ -15,9 +15,8 @@ from .script import Script, create_script
 CHROME_URI = os.environ.get('SELENIUM_URI', 'http://localhost:4444')
 CHROME_USER_AGENT   = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) ' \
                     + 'AppleWebKit/537.36 (KHTML, like Gecko) ' \
-                    + 'Chrome/91.0.4472.101 ' \
-                    + 'Safari/537.36 OPR/77.0.4054.90'
-
+                    + 'Chrome/91.0.4472.124 ' \
+                    + 'Safari/537.36 OPR/77.0.4054.254'
 
 def create_driver(**kwargs) -> WebDriver:
     """
@@ -26,7 +25,7 @@ def create_driver(**kwargs) -> WebDriver:
     Args:
         **timeout (int): Value sent to `driver.implicitly_wait`. Defaults to 10
         **user_agent (str): User Agent header. Default to `CHROME_USER_AGENT`
-        **save_session (bool): if `True` then current session will be stored and loaded.
+        **save_session (bool): if `True` then current session will be stored and loaded.g
                                Default to `False`
         **kwargs (any): All extra arguments are forwarded to seleniums `Webdriver()`
                         constructor
@@ -42,7 +41,6 @@ def create_driver(**kwargs) -> WebDriver:
     # create driver options
     chrome_options = ChromeOptions()
 
-    # change user agent
     chrome_options.add_argument(f'--user-agent={user_agent}')
 
     # save current/load previous session
@@ -114,14 +112,12 @@ class Scraper:
             driver (WebDriver): selenium webdriver instance
         """
         try:
-            # read
             for result in generator:
                 results.append(result)
 
             # stop webdriver session
-            if isinstance(driver, WebDriver):
-                if driver.session_id:
-                    driver.quit()
+            if isinstance(driver, WebDriver) and driver.session_id:
+                driver.quit()
 
         except WebDriverException:
             pass
@@ -142,13 +138,13 @@ class Scraper:
         if not isinstance(path, str):
             raise TypeError('`path` must be a string')
 
-        debug('Adding script ' + path)
+        self.logger.debug('Running script %s', path)
 
         results = []
         future = self.executor.submit(self.run_script, generator, results, driver)
 
         # prevent race conditions
-        time.sleep(4)
+        time.sleep(2)
 
         self.scripts[path] = {
             'driver': driver,
@@ -157,8 +153,6 @@ class Scraper:
             'results': results,
             'future': future,
         }
-
-        debug('Running script ' + path)
 
     def get_script(self, path: str) -> Script:
         """
@@ -185,7 +179,7 @@ class Scraper:
         if not self.is_script(path):
             return
 
-        debug('Deleting script ' + path)
+        self.logger.debug('Deleting script: %s', path)
 
         # send stopsignal to script
         if isinstance(self.scripts[path]['generator'], Generator):
@@ -226,11 +220,19 @@ class Scraper:
             self.delete_script(path)
 
         # create new script
-        driver = create_driver(**self.options)
-        script = create_script(path, driver, **self.options)
-        generator = script.execute(**kwargs)
+        self.logger.debug('Adding script: %s', path)
 
-        self.add_script(path, driver, script, generator)
+        driver = create_driver(**self.options)
+
+        try:
+            script = create_script(path, driver, **self.options)
+            generator = script.execute(**kwargs)
+
+            self.add_script(path, driver, script, generator)
+
+        except ImportError as err:
+            driver.quit()
+            raise err
 
         return self.get_status(path)
 
@@ -284,7 +286,7 @@ class Scraper:
 
                 results.append(result)
 
-        debug('Fetched results: ' + str(len(results)))
+        self.logger.debug('Fetched results: %d', len(results))
 
         return results
 
@@ -292,14 +294,15 @@ class Scraper:
         self.options = {**self.DEFAULT_OPTIONS, **kwargs}
         self.scripts = {}
         self.executor = ThreadPoolExecutor(16)
+        self.logger = logging.Logger(__file__)
 
     def __del__(self):
+        # free up thread executor
+        self.executor.shutdown()
+
         # clean up scripts
         for script in self.scripts:
             self.delete_script(script)
-
-        # free up thread executor
-        self.executor.shutdown()
 
 
 def create_scraper(**kwargs) -> Scraper:
